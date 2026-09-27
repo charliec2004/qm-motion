@@ -77,6 +77,22 @@ See [Tailscale Serve](https://tailscale.com/docs/features/tailscale-serve).
 The deployment's `publicUrl` controls the login origin; startup and smoke
 helpers read that address. GBrain's Docker-local address is unchanged.
 
+### Live view of the agent's dev server
+
+To watch the page the agent is building from the Mac, run `npm run preview --
+start` on the Linux box. A host proxy forwards `127.0.0.1:15173` to port 5173
+in the agent computer, rewriting Host and Origin so Vite accepts the request
+and passing Vite's HMR WebSocket. Publish it once, tailnet-only:
+
+```sh
+sudo tailscale serve --bg --https=8443 http://127.0.0.1:15173
+```
+
+Then open `https://charlies-pc.tail1d1ed7.ts.net:8443/`. With no dev server
+running, the page says so. `npm run preview -- status|stop`; remove the route
+with `sudo tailscale serve --https=8443 off`. The agent never sees this path;
+it keeps using its headless Chromium and captured evidence.
+
 ## Fresh checkout
 
 For a **different Linux machine**, first set `publicUrl` in

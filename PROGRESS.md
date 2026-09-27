@@ -120,6 +120,12 @@ machine. The motion product is intentionally not implemented by this kickoff.
   passed: storefront `9b465c4`, GBrain empty, memory reset, 0 open sessions.
   Delivered attachments stay in QM's file store (no supported delete). Next:
   New session in the web UI, then prompt 1 from demo.md.
+- **Live view for people, 4:30 PM.** `npm run preview -- start` proxies host
+  `127.0.0.1:15173` to the agent computer's `:5173` (Host/Origin rewritten for
+  Vite, HMR WebSocket passed). Checked with a scratch Vite outside the
+  workspace: page loaded through the proxy, `[vite] connected.`, and a tailnet
+  Host header returned 200. Needs the one-time `sudo tailscale serve --bg
+  --https=8443 http://127.0.0.1:15173` ([setup.md](docs/setup.md#live-view-of-the-agents-dev-server)).
 
 ## Working foundation
 
