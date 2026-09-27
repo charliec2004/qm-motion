@@ -17,6 +17,24 @@ sharing, narrower crop selection, better synchronization diagnostics, and
 semantic retrieval when an embedding provider is deliberately configured.
 Choose these from actual usage, not as prerequisites for the MVP.
 
+Deferred from the September 27 motion-tool research (not in the MVP):
+
+- **Seek-based checkpoints:** pause animations (CDP `Animation.setPaused` /
+  `seekAnimations`) and screenshot exact progress points. Good for
+  path/position bugs; likely misses end-of-animation and framework-timing
+  bugs such as the Field Notes rebound.
+- **A fake clock** (Playwright `page.clock`) to step JavaScript/rAF-driven
+  motion. It does not control CSS animations.
+- **Running each check with reduced motion both on and off.**
+- **An "on top" check** at the element's centre (`document.elementFromPoint`)
+  to catch covering and clipping as text.
+- **Automatic flags** (jump, stall, dropped frame) with tuned thresholds.
+  This needs evidence that they help, and must not replace agent judgement.
+- **Per-library behaviour** (Motion, GSAP, React Spring) under seeking versus
+  the fake clock.
+- **Native video input** for models that support it (for example Gemini), for
+  a whole-motion "does this feel right" check.
+
 Continue to use QM for general agent orchestration, browsers for rendering,
 and GBrain for knowledge. A new dashboard, memory infrastructure, custom
 browser, or generalized visual testing platform requires a separate product

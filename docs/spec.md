@@ -8,6 +8,12 @@ errors and test procedures. [architecture.md](architecture.md) explains why;
 Choices marked **Decision** were made on September 27 to remove ambiguity.
 Change them here first if needed.
 
+**Text first, image to confirm.** Every look at a take gives the agent a short
+numeric table of the watched elements (from the trace) and one sheet. The
+table is cheap and exact; the sheet shows what the numbers cannot, such as
+clipping or overlap. In the spike, a per-frame trace of the panel's height
+exposed the rebound in every logged run.
+
 ## 1. `motion_view` (QM core patch)
 
 **File:** `deployment/runtime/patches/motion-evidence-image.patch`.
@@ -109,14 +115,20 @@ A scenario is JSON data; the CLI contains no target-specific logic.
   "reducedMotion": "no-preference",
   "ready": { "role": "region", "name": null, "state": "visible", "settleMs": 350 },
   "trigger": { "action": "click", "role": "button", "name": "What comes with a Field Notes membership?" },
+  "watch": [
+    { "name": "first-answer", "selector": "<CSS selector for the first answer panel>" },
+    { "name": "second-question", "selector": "<CSS selector for the next question header>" }
+  ],
   "recordBeforeMs": 300,
   "recordAfterMs": 800
 }
 ```
 
-The `ready` locator must match the first answer panel being open. Confirm the
-exact role/name against the real page when writing milestone 2; the values
-above are placeholders for that check. `appDir` provides the app revision.
+The `ready` locator must match the first answer panel being open, and `watch`
+lists the elements to trace (1–5, each a name and a CSS selector). Confirm the
+exact locators and selectors against the real page when writing milestone 2;
+the values above are placeholders. `watch` names *where to look*, not what is
+wrong. `appDir` provides the app revision.
 
 ## 5. `motion capture`
 
@@ -134,12 +146,21 @@ source is *not* reset between takes; that is the agent's choice.
    factor and reduced-motion setting, and navigate.
 3. Wait for `ready`, then `settleMs`.
 4. Install a capture-phase listener for the trigger event. It records
-   `performance.timeOrigin + event.timeStamp` as the trigger's wall-clock
-   time in ms.
-5. Start `Page.startScreencast` (`format: "jpeg"`, `quality: 80`,
+   `event.timeStamp` (page clock) and `performance.timeOrigin +
+   event.timeStamp` (wall-clock ms).
+5. Install the **trace sampler**: a `requestAnimationFrame` loop that, every
+   frame, records the rAF timestamp and, for each watched element,
+   `getBoundingClientRect()` (x, y, width, height), computed `opacity`,
+   `display` and `visibility`, the `hidden` attribute, and whether it is
+   still in the document. Animations are updated before rAF callbacks, so
+   each sample is the state about to be painted in that frame. This is
+   instrumentation: reading layout every frame has a cost. In the spike, the
+   same kind of sampler did not stop the defect reproducing.
+6. Start `Page.startScreencast` (`format: "jpeg"`, `quality: 80`,
    `everyNthFrame: 1`) and acknowledge every frame. Wait `recordBeforeMs`.
-6. Perform the trigger with Playwright's locator.
-7. Wait `recordAfterMs`, then stop the screencast.
+7. Perform the trigger with Playwright's locator.
+8. Wait `recordAfterMs`, then stop the screencast and the sampler, and read
+   the samples back.
 
 **Run ID:** `<UTC yyyymmddTHHMMSS>-<label>-<takeIndex>-<4 hex>`.
 
@@ -150,17 +171,24 @@ source is *not* reset between takes; that is the agent's choice.
   `{ "file", "chromeTimestampS", "msFromTrigger" }`. `chromeTimestampS` is
   the screencast `metadata.timestamp`; `msFromTrigger` is
   `chromeTimestampS*1000 − triggerWallMs`, rounded to 0.1.
+- `trace.json`: an array of samples
+  `{ "msFromTrigger", "elements": { "<name>": { "x", "y", "width", "height",
+  "opacity", "display", "visibility", "hidden", "connected" } } }`, where
+  `msFromTrigger = rafTimestamp − trigger event.timeStamp` (same page clock,
+  so exact to the frame). A watched element that is missing is recorded as
+  `null`.
 - `manifest.json`: see below.
 
 **`manifest.json`:** `runId`, `label`, `take`, the scenario (inline copy),
 `browser` (`browser.version()`), `playwrightVersion`, the viewport and scale
 factor, `app` (`git -C appDir rev-parse HEAD`, plus the SHA-256 of
 `git -C appDir diff HEAD` output), `trigger.wallMs`, `frameCount`,
+`traceSampleCount`, `sampler: "rAF getBoundingClientRect + computed style"`,
 `timingSource` (`"CDP screencast metadata.timestamp; frames arrive ~9–28ms
 after the page state they show"`), `startedAt`, and a SHA-256 for each file.
 
 **stdout:**
-`{"ok":true,"runs":[{"runId","dir","frameCount","triggerFound":true}]}`.
+`{"ok":true,"runs":[{"runId","dir","frameCount","traceSampleCount","triggerFound":true}]}`.
 If the trigger listener never fires, the take is kept but reported with
 `"triggerFound": false` and `ok: false`.
 
@@ -170,17 +198,31 @@ If the trigger listener never fires, the take is kept but reported with
 in ms from the trigger and the crop in CSS pixels (equal to image pixels at
 scale 1).
 
-- **Frames:** selects *every* frame with `from ≤ msFromTrigger ≤ to`.
-  **Decision:** it never samples. If there are more than 24 frames, it fails
-  with "window has N frames; narrow it or crop" rather than skipping any. It
-  also fails if there are no frames, if `from ≥ to`, or if the crop is out of
-  bounds.
+- **Table (always):** from `trace.json`, one row per sample in the window
+  where any watched value changed (≥ 0.5 px, or any change in opacity,
+  display, visibility, hidden or connected), plus the first and last rows.
+  Values are rounded to 0.01. It is capped at 60 rows; beyond that it asks
+  for a narrower window. Shape, with real values from spike take
+  `ab/rec60-marker-1` (last rows of the close):
+
+  ```
+  ms      first-answer h   first-answer hidden   second-question y
+  +230.1  2.25             false                 363.75
+  +246.8  0.59             false                 362.09
+  +263.5  76.78            false                 438.28
+  +280.1  0.00             true                  361.50
+  ```
+- **Frames:** selects *every* screencast frame with
+  `from ≤ msFromTrigger ≤ to`. **Decision:** it never samples. If there are
+  more than 24, it skips the sheet and says "window has N frames; narrow it or
+  crop"; the table is still returned. It fails if `from ≥ to` or the crop is
+  out of bounds.
 - **Layout:** crops each frame, then scales every tile to the same size so
   the sheet is at most 1600 px wide, with 4–6 columns. Each tile is
   labelled `+264.3 ms`, plus `#frame-index`.
 - **Output:** writes `sheets/inspect_<from>_<to>[_crop].png` inside the run
   directory, targeting about 1 MB. If it is over 4.5 MB or 2000 px, it fails.
-- **stdout:** `{"ok":true,"sheet":"artifacts/motion/<run>/sheets/…png","frames":N,"width","height","bytes"}`.
+- **stdout:** `{"ok":true,"table":"<text>","sheet":"artifacts/motion/<run>/sheets/…png" | null,"sheetSkippedReason":null | "<text>","frames":N,"width","height","bytes"}`.
 
 ## 7. `motion compare`
 
@@ -198,23 +240,35 @@ scale 1).
   different times and forcing a grid would drop or repeat frames.
 - **Size:** fails if any row has more than 16 frames or the sheet exceeds the
   size limits. The same crop applies to all rows.
+- **Tables:** prints the section 6 table for every take, labelled like the
+  sheet rows, so values can be compared take by take.
 - **Output:** writes `artifacts/motion/compare-<UTC>-<4 hex>/sheet.png` and a
-  `compare.json` listing its inputs and per-row frame counts.
-- **What it does not do:** it never states whether the defect is present;
-  the agent judges each row.
+  `compare.json` listing its inputs, per-row frame counts and the tables.
+- **What it does not do:** it never states whether the defect is present, and
+  it applies no thresholds or "jump" flags; the agent judges each take.
+
+## 7a. Chrome animation details (optional; cut early)
+
+If time allows, `motion capture` also enables the CDP `Animation` domain
+before the trigger. It records each `animationStarted` event's name, type
+(CSS animation, CSS transition or Web Animation), duration, delay, easing
+and target node, and writes them to `animations.json`. `motion inspect`
+then lists them above the table. This helps connect what the agent saw to
+the code that ran. It never pauses or seeks anything.
 
 ## 8. Agent guidance (`deployment/sandbox/skills/motion-workflow/SKILL.md`)
 
 Rewrite it when the CLI exists. It must say, briefly:
 
-1. For motion problems, capture takes, inspect a narrow window around the
-   trigger, and call `motion_view` on the sheet. Never describe an image you
-   have not viewed.
+1. For motion problems, capture takes and inspect a narrow window around the
+   trigger. Read the table first, then call `motion_view` on the sheet to
+   confirm what the numbers suggest. Never describe an image you have not
+   viewed.
 2. The exact command syntax from sections 5–7, and where scenarios live.
 3. The rebound-style lesson: a defect can last a single frame, so view every
    frame in the window and take several takes.
-4. Frame times are capture times (about 9–28ms after the paint), not exact
-   paint times.
+4. Table times are exact page frame times. Sheet frame times are capture
+   times, about 9–28ms after the paint they show.
 5. After editing, repeat with three or more takes and use `motion compare`;
    report every take, including ones where the defect did not appear.
 6. Images last one turn; call `motion_view` again in later turns.
@@ -252,5 +306,7 @@ Keep them few and meaningful.
    checks.
 
 **CLI:** `node --test` covers only the pure functions: path and window
-validation, frame selection, and `msFromTrigger`. Everything else is proven
-by real takes in the computer.
+validation, frame and row selection, and `msFromTrigger`. Everything else is
+proven by real takes in the computer. Tool check for milestone 2, for us, not
+the agent: three Field Notes takes whose `trace.json` shows the one-frame
+reopen measured in the spike. This validates capture, not a diagnosis.

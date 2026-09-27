@@ -50,8 +50,10 @@ Every doc uses these words in exactly these senses.
 | **Trigger** | The user action a take is aligned to, such as the click. Times are given in ms from the trigger. |
 | **Take** (or **run**) | One recording of a scenario from a fresh page. Each has a run ID and a folder `artifacts/motion/<run-id>/`. |
 | **Frame** | One screenshot Chrome delivers during a take, with Chrome's own timestamp. |
+| **Watched element** | An element named in the scenario whose size, position and visibility are traced every frame. |
+| **Trace** | The per-frame record of watched elements during a take (`trace.json`), timed on the page's own clock. `motion inspect` prints it as a short **table** of the frames where something changed. |
 | **Manifest** | The take's record of what was captured and how: app revision, browser version, viewport, trigger time, timing source, file hashes. |
-| **Sheet** | One small PNG grid of frames from a chosen window (and optional crop), labelled in ms from the trigger. This is what the model looks at. |
+| **Sheet** | One small PNG grid of frames from a chosen window (and optional crop), labelled in ms from the trigger. The model reads the table first, then views the sheet to confirm. |
 | **Rebound** | The Field Notes defect: while closing, the answer panel pops fully open again for exactly one frame, then disappears (Radix issue #1074). |
 | **`motion_view`** | The QM tool we add. It hands a sheet to the model as an actual image, not a file path. |
 | **Case** | A short GBrain record of one investigation: request, reproduction, observations, fix, verification, evidence paths. |

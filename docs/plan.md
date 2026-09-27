@@ -31,10 +31,10 @@ conversation with GPT-6 Sol, not a script calling our code directly.
 | # | Minutes | Build | Done when |
 | --- | --- | --- | --- |
 | 1 | 0–30 | `motion_view` core patch ([spec §1](spec.md#1-motion_view-qm-core-patch)); `qm-turn.mjs` flags ([§2](spec.md#2-running-real-turns)); deploy with `npm start` | [Spec §10](spec.md#10-tests) tests 1–4 pass: a real turn reports a random code visible only inside the PNG, and the four bad paths each return the right error. |
-| 2 | 30–60 | `motion capture` and the Field Notes scenario ([spec §3–5](spec.md#5-motion-capture)) | One take produces frames, `frames.json` with Chrome timestamps, and a manifest with app revision, browser version, viewport, trigger time and timing source. |
-| 3 | 60–80 | `motion inspect` ([spec §6](spec.md#6-motion-inspect)) | A real turn captures, inspects and views a sheet, then describes the reopened frame. Labels are ms from the trigger; invalid windows fail; sheet ≤ ~1 MB. |
+| 2 | 30–60 | `motion capture` with the trace sampler, and the Field Notes scenario ([spec §3–5](spec.md#5-motion-capture)) | One take produces frames, `frames.json` with Chrome timestamps, `trace.json` for the watched elements, and a manifest with app revision, browser version, viewport, trigger time and timing source. Three takes' traces show the one-frame reopen measured in the spike. |
+| 3 | 60–80 | `motion inspect` ([spec §6](spec.md#6-motion-inspect)) | A real turn captures, reads the table, views the sheet, and describes the reopened frame. Labels are ms from the trigger; invalid windows fail; sheet ≤ ~1 MB. |
 | 4 | 80–120 | Guidance skill ([spec §8](spec.md#8-agent-guidance-deploymentsandboxskillsmotion-workflowskillmd)); agent works from a reset copy | In a real turn the agent reproduces the rebound, cites the frame, finds the cause and makes a change it justifies. No diagnosis is supplied. |
-| 5 | 120–155 | `motion compare` ([spec §7](spec.md#7-motion-compare)); three or more takes per side | A trigger-aligned before/after sheet shows every take, and the agent judges each take. Mismatched runs are rejected or visibly labelled. |
+| 5 | 120–155 | `motion compare` ([spec §7](spec.md#7-motion-compare)); three or more takes per side | Per-take tables and a trigger-aligned before/after sheet show every take, and the agent judges each take. Mismatched runs are rejected or visibly labelled. |
 | 6 | 155–175 | Case write and retrieval ([spec §9](spec.md#9-gbrain-case)) | A fresh turn retrieves the case by a unique marker. With memory made unavailable, capture and inspection still work and the failure is reported. |
 | 7 | 175–225 | Rehearse, fix failures, freeze | Full-loop latency measured from reset; a labelled recording of a real successful run exists; PROGRESS.md updated. See [demo.md](demo.md). |
 
@@ -85,11 +85,12 @@ agent's job. Demo-specific fix notes are in [demo.md](demo.md#notes-for-later).
 Cut from the top when time runs short.
 
 1. Metrics, heatmaps, optical flow, motion scores, profiler integration.
-2. A general interaction language or broad app support; keep one scenario file.
-3. Multiple providers, harnesses or browsers, polished UI, dashboards.
-4. Baking the CLI into the sandbox image; keep running it from `/root/workspace`.
-5. Smart frame selection; keep a fixed window plus manual crop.
-6. Semantic memory; keep the scoped case write and keyword retrieval, and
+2. Chrome animation details (`animations.json`, [spec §7a](spec.md#7a-chrome-animation-details-optional-cut-early)).
+3. A general interaction language or broad app support; keep one scenario file.
+4. Multiple providers, harnesses or browsers, polished UI, dashboards.
+5. Baking the CLI into the sandbox image; keep running it from `/root/workspace`.
+6. Smart frame selection; keep a fixed window plus manual crop.
+7. Semantic memory; keep the scoped case write and keyword retrieval, and
    report any memory blocker separately.
 
 Never cut the core loop: request → visible frames → agent edit → repeat →

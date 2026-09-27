@@ -10,13 +10,16 @@ Terms such as turn, take, trigger and sheet are defined in
 The user asks QM's agent about a visual problem. In **one turn**, the agent:
 
 1. **Captures** takes of the interaction: `motion capture` (run with QM's
-   `execute` tool) drives Chromium in the agent's computer and saves every
-   screencast frame with Chrome's own timestamp, plus a manifest.
-2. **Inspects** a window around the trigger: `motion inspect` builds one small
-   sheet containing *every* frame in that window, labelled in ms from the
-   trigger, optionally cropped.
-3. **Sees** the sheet: the `motion_view` tool hands the image to the model as
-   pixels. Without it the model gets only a file path.
+   `execute` tool) drives Chromium in the agent's computer. It saves every
+   screencast frame with Chrome's own timestamp, a per-frame **trace** of the
+   watched elements' size, position and visibility, and a manifest.
+2. **Inspects** a window around the trigger: `motion inspect` prints a short
+   **table** from the trace (only frames where something changed) and builds
+   one small sheet containing *every* frame in that window, labelled in ms
+   from the trigger, optionally cropped.
+3. **Reads, then sees**: the agent reads the table first, then calls the
+   `motion_view` tool to see the sheet as pixels and confirm. Without
+   `motion_view` the model gets only a file path.
 4. **Diagnoses and edits** the application itself. How to fix is the agent's
    decision; the motion tools only provide evidence.
 5. **Repeats and compares**: new takes from reset state, then `motion compare`
@@ -55,9 +58,9 @@ Three pieces. Everything else already exists.
 
 | Command | Input | Output |
 | --- | --- | --- |
-| `motion capture` | A saved scenario file (URL, viewport, ready condition, trigger target, recording length after the trigger) and a label | Run ID; `artifacts/motion/<run-id>/` containing the frames, `frames.json` (Chrome timestamps) and `manifest.json` |
-| `motion inspect` | Run ID, `--from`/`--to` in ms from the trigger, optional `--crop x,y,w,h` | One sheet PNG plus its metadata. Invalid or empty windows fail clearly. |
-| `motion compare` | The run IDs of the before takes and the after takes (three or more each), same window and crop | One sheet with one row per take, aligned on the trigger. Mismatched viewport, browser or URL is rejected. |
+| `motion capture` | A saved scenario file (URL, viewport, ready condition, trigger target, elements to watch, recording length) and a label | Run ID; `artifacts/motion/<run-id>/` containing the frames, `frames.json` (Chrome timestamps), `trace.json` (per-frame values of watched elements) and `manifest.json` |
+| `motion inspect` | Run ID, `--from`/`--to` in ms from the trigger, optional `--crop x,y,w,h` | A text table of changed trace values, plus one sheet PNG. Invalid windows fail clearly. |
+| `motion compare` | The run IDs of the before takes and the after takes (three or more each), same window and crop | One table per take plus one sheet with one row per take, aligned on the trigger. Mismatched viewport, browser or URL is rejected. |
 
 The scenario is data, not code: the tool knows nothing about Field Notes or
 its bug. One scenario file for the Field Notes close interaction is enough for
@@ -154,6 +157,19 @@ installed for ad-hoc exploration; its constant-rate video is not timing
 evidence. Record at least three takes per side and report takes that show no
 defect. Show every frame in a window rather than sampling, because sampling can
 skip a one-frame defect.
+
+**Numbers first.** Each take also records a per-frame trace of the watched
+elements, sampled in the page with `requestAnimationFrame`, so it uses the
+page's own clock. The spike's logger did exactly this. In all 24 logged
+agent-browser runs, across three consecutive frames the panel height went
+under 1px (0 or 0.59px), then 76.78px, then hidden. The
+trace is exact and cheap to read as text; the sheet confirms what numbers
+cannot show. **Not adopted:** pausing animations and seeking to checkpoints.
+The rebound happens right after the 250ms close animation ends (measured
+253–281ms after the click), so seeking through the animation would likely show
+a clean close. Seeking also does not fire `animationend` naturally.
+Real-time capture is the primary method; seeking is on the
+[roadmap](roadmap.md).
 
 A proposed run directory in the computer's durable workspace is
 `artifacts/motion/<run-id>/`, containing `manifest.json`, the screencast frames
