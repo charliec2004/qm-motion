@@ -88,6 +88,7 @@ fi
 # 1. Everything an earlier run could leave, except QM's own workspace files, the
 #    motion CLI, environment-smoke evidence and live background jobs.
 list=$(python3 scripts/computer.py bash -s <<'REMOTE'
+live() { [[ ! -f "$1/code" ]] && [[ "$2" =~ ^[0-9]+$ ]] && [[ "$(ps -o stat= -p "$2" 2>/dev/null)" =~ ^[^Z] ]]; }
 # Stop the previous run's background jobs (dev servers, previews) so their logs can be archived.
 for d in /root/.agent-proc/*/; do
   pid=$(cat "$d/pid" 2>/dev/null || true)
@@ -99,7 +100,7 @@ for pid in $(pgrep -f '[n]ode_modules/.bin/vite' || true); do kill "$pid" 2>/dev
 # Wait (up to 5 s) for those jobs to exit so their logs are archived below.
 for attempt in {1..10}; do
   alive=0
-  for d in /root/.agent-proc/*/; do pid=$(cat "$d/pid" 2>/dev/null || true); [[ "$pid" =~ ^[0-9]+$ ]] && kill -0 "$pid" 2>/dev/null && alive=1; done
+  for d in /root/.agent-proc/*/; do live "$d" "$(cat "$d/pid" 2>/dev/null || true)" && alive=1; done
   [[ $alive == 0 ]] && break
   sleep 0.5
 done
@@ -117,8 +118,7 @@ for p in /root/.agent-browser/*; do
 done
 for d in /root/.agent-proc/*/; do
   [[ -d "$d" ]] || continue
-  pid=$(cat "$d/pid" 2>/dev/null || true)
-  if [[ -z "$pid" ]] || ! kill -0 "$pid" 2>/dev/null; then echo "${d#/}"; fi
+  live "$d" "$(cat "$d/pid" 2>/dev/null || true)" || echo "${d#/}"
 done
 for p in /tmp/* /tmp/.[!.]*; do
   [[ -e "$p" ]] || continue
