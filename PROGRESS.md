@@ -86,6 +86,12 @@ Pre-build investigation, September 27, 9:20–10:55 AM PT:
 - **API probe** (real call, outside QM). `gpt-6-sol` on the Responses API read
   a withheld six-digit code from a PNG returned as a tool result, in 2 of 2
   variants; `artifacts/openai-tool-image-probe/`.
+- **Deployment facts** (read from code and live config). The security posture
+  is `auto`, but screening is off, so there is no notice on tool images. The
+  web chat shows attached PNG/JPEG/WebP inline; video gets a download card.
+  `threadRef` names continue conversations, and the default is one shared
+  thread. After a sandbox image rebuild: `npm stop && npm start`, one agent
+  command, then `computer.py --connect` for GBrain.
 - **Capture spike** (measured in the QM computer). The one-frame rebound was
   caught in 7 of 7 raw CDP screencast runs, 13 of 14 agent-browser runs at
   60fps, and 2 of 3 at 30fps. Recording did not suppress it, and slow motion

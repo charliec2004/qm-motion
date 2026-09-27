@@ -63,10 +63,12 @@ with `gpt-6-sol` and `pi`, and saves the run to
 `artifacts/smoke/run-<id>.json`. Add two flags:
 
 - `--thread <name>`: sets `threadRef` to
-  `web:charlieconner04@gmail.com:<name>`. A new name starts a fresh
-  conversation, as in `scripts/smoke-agent.mjs`. Reusing a name is expected
-  to continue that conversation; this is inferred, not yet checked, and
-  milestone 1 test 3 confirms it.
+  `web:charlieconner04@gmail.com:<name>`. Verified in code on September 27:
+  the web server forwards a `threadRef` starting with `web:`, and core
+  continues the existing session with that name (`sessions.getByThread`,
+  `src/api/app-turn.ts:181`) or starts a new one. Without a name, every turn
+  goes to one shared conversation, `web:<user>:default`, so tests must always
+  pass `--thread`.
 - `--timeout <seconds>`: replaces the 240-second abort (default stays 240).
   QM itself has no turn limit (`turnWallClockSec: 0`). A single `execute`
   command is capped at 120s by default and 300s at most.
@@ -242,8 +244,8 @@ Keep them few and meaningful.
 2. On a new thread, ask the agent to call `motion_view` on the image and
    report the code. Pass if the reply matches.
 3. On the same thread, a second turn asks what the code was without calling
-   tools. Expect it cannot see the image (confirms images last one turn).
-   Report the result either way.
+   tools. Expect it cannot see the image, which confirms images last one
+   turn. Report the result either way.
 4. On one turn, ask for `motion_view` on four paths: a missing file, a 2400 px
    wide PNG, `../qm-computer-proof.txt`, and a `.png` containing text. Pass
    if the run JSON shows four `[motion_view error]` results naming the right

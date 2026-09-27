@@ -65,14 +65,16 @@ environment failure as a finished milestone.
 - **Timing labels.** A frame arrives about 9–28ms after the page state it
   shows. Label times as capture times, not paint times.
 - **Images last one turn.** Later turns must call `motion_view` again.
-- **Security notice.** Under the Auto posture a `motion_view` result carries a
-  "not security-screened" notice and an audit record. Which posture this
-  deployment uses has not been checked.
-- **Rebuilding the sandbox image** recreates the computer and kills running
-  jobs, including the demo server. That's why the CLI runs from
-  `/root/workspace` until it is stable.
-- **Unverified:** whether the web UI previews attached images inline, and which
-  command restarts core after a sandbox-only rebuild.
+- **No security notice.** Checked: posture `auto`, but screening is off
+  (`SECURITY_SCREEN_BACKEND=off`), so `motion_view` results pass unmodified.
+- **Rebuilding the sandbox image** recreates the computer, kills running jobs
+  (including the demo server) and drops its GBrain network. Follow the
+  [three-step procedure](architecture.md#sandbox-image-changes). That's why the
+  CLI runs from `/root/workspace` until it is stable.
+- **Attach PNG, not video.** The web chat shows attached images inline; video
+  only gets a download card.
+- **Always name the test conversation.** `qm-turn.mjs` without `--thread` posts
+  into one shared default conversation ([spec §2](spec.md#2-running-real-turns)).
 
 **Scope.** The motion tools are debugging evidence. They make the agent aware
 of what happens on screen over time; choosing and making the fix is the

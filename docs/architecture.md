@@ -202,11 +202,14 @@ GPT-6 Sol as pixels:
 4. `recordResult` (`src/harness/agent-tools.ts:419`) logs only the joined text
    and returns non-text blocks untouched. Screening (`src/core/orchestrator.ts`
    ~3250) allows non-`external` provenance. Any new tool is `external`
-   (`src/security/security-posture.ts:110`). Under the Auto posture (which
-   posture this deployment uses has not been checked) its image
-   result is "unscreenable", so it fails open: a `[NOT security-screened …]`
-   text notice is prepended, an audit record is written, and the image is
-   kept. The approval, timing and runtime-barrier wrappers pass content
+   (`src/security/security-posture.ts:110`). Checked September 27: this
+   deployment's posture is `auto` (no `HARNESS_SECURITY_POSTURE`, empty
+   `security_postures` table), but `SECURITY_SCREEN_BACKEND=off` turns
+   inbound screening off (`src/wiring.ts:760`,
+   `resolution-service.ts:86`). So tool results are not screened at all and
+   a `motion_view` image passes with no notice. If screening is ever enabled,
+   an image result fails open: a `[NOT security-screened …]` notice is
+   prepended, an audit record is written, and the image is kept. The approval, timing and runtime-barrier wrappers pass content
    through except on denial or cancellation.
 
 **Why it is missing.** This is not a pi limitation. pi's own built-in `read`
@@ -268,8 +271,11 @@ the returned image, plus the four failure cases. Filename echoes do not pass.
 ## Deployment notes
 
 **User-visible evidence.** In web conversations the `attach` tool stages up to
-20 workspace files for the reply (`src/core/attachments.ts:124`). Whether the
-web UI previews PNG or video inline is unverified.
+20 workspace files for the reply (`src/core/attachments.ts:124`). Checked in
+the deployed web UI bundle on September 27: an attached file with an artifact
+ID and an image type (PNG, JPEG, WebP, GIF, AVIF, BMP and a few others) is
+shown inline as a clickable `<img>`. Video gets a file card with a download
+link, not a player. So attach sheets as PNG.
 
 ### Sandbox image changes
 
@@ -278,9 +284,21 @@ agent-browser. Core caches the sandbox image ID once per process
 (`local-sandbox.ts` `preflight`). After a rebuild, core must restart; the next
 provision then removes and recreates the computer container
 (`ensureContainer`), keeping the `/root` volume but killing running processes,
-including a QM `background` demo server. Which project command restarts core
-when only the sandbox image changed is unverified. For fast iteration, copy
-scripts into `/root/workspace` and bake them in once stable.
+including a QM `background` demo server. For fast iteration, copy scripts into
+`/root/workspace` and bake them in once stable.
+
+To apply a rebuilt sandbox image:
+
+1. Run `npm stop && npm start`. `stop.sh` stops every project container,
+   core included, and `qm up` starts them again; this lifecycle already passed
+   (PROGRESS.md). The new core process re-reads the image ID.
+2. Run any agent command (for example a real turn that calls `execute`), so
+   core recreates the computer from the new image.
+3. Run `python3 scripts/computer.py --connect`. The recreated container lacks
+   the `qm-motion-brain-clients` network, and `start.sh` only connects
+   computers that existed when it ran. Confirm with
+   `npm run computer -- gbrain whoami`; if the client is missing, run
+   `python3 scripts/connect-gbrain.py`.
 
 ## Memory and comparison boundaries
 
