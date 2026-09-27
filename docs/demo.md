@@ -50,8 +50,10 @@ can affect rendering; no smoothness claim follows from nominal FPS. The full
    that copy and its edits. It serves `http://localhost:4173` **inside that
    computer**. `current` points to the editable copy. The host's localhost is a
    different network namespace.
-3. Run `npm run demo -- check` for the target-readiness probe. The selected
-   computer's current run retains `evidence/geometry.json` and `settled.png`.
+3. Run `npm run demo -- check` for the target-readiness probe. It writes
+   `/root/demo-readiness/geometry.json` and `settled.png`, outside the workspace.
+   `README.md` and `check.mjs` describe the defect, so they are kept out of
+   the agent's copy.
 4. Open the app in that computer's Chromium at `960×720`, normal motion,
    device scale 1. Fresh navigation opens the first question. Wait at least
    `350ms`, then click **What comes with a Field Notes membership?** once.

@@ -7,6 +7,11 @@ case "$action" in start|reset|status|stop|check) ;; *) echo 'Usage: npm run demo
 
 # Every operator action goes through the selected QM computer. Never reset a
 # user's checkout: each reset installs into a new, retained run directory.
+# README.md and check.mjs describe the defect, so they stay out of the agent's
+# copy; check brings the probe in only while it runs.
+if [[ "$action" == check ]]; then
+  python3 scripts/computer.py sh -c 'cat > /root/workspace/qm-motion-demo/current/.readiness-check.mjs' < demo/check.mjs
+fi
 state=$(python3 scripts/computer.py bash -s -- "$action" <<'REMOTE'
 set -euo pipefail
 base=/root/workspace/qm-motion-demo
@@ -24,7 +29,8 @@ if [[ "$action" == status ]]; then
   echo "Operator demo running: $running; workspace: $(readlink -f "$base/current" 2>/dev/null || true)"
 elif [[ "$action" == check ]]; then
   if [[ "$running" != true ]]; then echo 'Start the demo first.' >&2; exit 1; fi
-  node "$base/current/check.mjs" "$base/current/evidence"
+  trap 'rm -f "$base/current/.readiness-check.mjs"' EXIT
+  node "$base/current/.readiness-check.mjs" /root/demo-readiness
 elif [[ "$action" == stop || "$action" == reset ]]; then
   if [[ "$running" == true ]]; then
     kill "$pid"
@@ -59,7 +65,7 @@ else
   run="$(date -u +%Y%m%dT%H%M%SZ)-$$"
   destination="/root/workspace/qm-motion-demo/runs/$run"
   python3 scripts/computer.py mkdir -p "$destination"
-  tar -C demo --exclude=node_modules --exclude=public/bundle.js --exclude=public/bundle.css \
+  tar -C demo --exclude=node_modules --exclude=README.md --exclude=check.mjs --exclude=public/bundle.js --exclude=public/bundle.css \
     --exclude=public/bundle.js.map --exclude=public/bundle.css.map -cf - . |
     python3 scripts/computer.py tar --no-same-owner -xf - -C "$destination"
 fi
@@ -82,7 +88,7 @@ if [[ "$new_copy" == true ]]; then
   npm ci --no-audit --no-fund
   git init --quiet
   git add .
-  git -c user.name='QM Motion demo' -c user.email='qm-motion@localhost' commit --quiet -m 'Pinned Radix issue 1074 reproduction'
+  git -c user.name='QM Motion demo' -c user.email='qm-motion@localhost' commit --quiet -m 'Field Notes baseline'
   ln -sfn "$destination" /root/workspace/qm-motion-demo/current
 fi
 nohup node "$destination/server.mjs" >server.log 2>&1 </dev/null &

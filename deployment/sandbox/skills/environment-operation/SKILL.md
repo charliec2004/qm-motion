@@ -1,6 +1,6 @@
 ---
 name: environment-operation
-description: Check the QM Motion local agent computer, Chromium, recorder, and GBrain client. Use for runtime environment troubleshooting.
+description: Check the QM Motion local agent computer, Chromium, the motion CLI, and GBrain client. Use for runtime environment troubleshooting.
 ---
 
 This is the runtime agent computer, not the host deployment directory.
@@ -10,7 +10,8 @@ Use `execute` to check `chromium --version`, `agent-browser --version`,
 configured local computer. Local `sandbox status`/restart actions are unsupported;
 do not call them as a prerequisite for executing a command.
 
-Chromium is `/usr/bin/chromium`. agent-browser uses it through
+The recorder is `motion capture` (`node /root/workspace/motion/cli.mjs`; see
+the motion-workflow skill). Chromium is `/usr/bin/chromium`. agent-browser uses it through
 `AGENT_BROWSER_EXECUTABLE_PATH`; do not select Kernel, Anchor, Browserbase, or
 another remote browser. Target dev servers run in this same computer.
 Node browser dependencies are installed under `/opt/qm-motion/node_modules`.
