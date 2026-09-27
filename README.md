@@ -6,7 +6,8 @@ concise evidence-backed cases. The kickoff environment works; the motion
 extension is the next implementation task.
 
 **New here?** Read [the product in plain words](docs/brief.md#in-plain-words)
-first.
+first. What existed before the hackathon build window is disclosed in
+[starting-point.md](docs/starting-point.md).
 
 ## Run on Linux; access over Tailscale
 

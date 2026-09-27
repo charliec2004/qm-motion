@@ -144,7 +144,9 @@ and [Claude Code skills](https://code.claude.com/docs/en/skills). Root
 `CLAUDE.md` links to `AGENTS.md`. These developer paths do not install skills
 into QM computers; deployment runtime skills are separate.
 
-Our original work is the project instruction/docs set, environment scripts and
+What existed at the start of the build window is listed in
+[starting-point.md](starting-point.md). Our original work is the project
+instruction/docs set, environment scripts and
 configuration, local service integration, two project workflow skills, and the
 minimal Field Notes target app, plus the two small QM environment patches.
 The capture/inspect/compare extension remains
