@@ -42,7 +42,9 @@ Earlier runs must leave nothing the agent could read, or the demo is no longer
    ```
 
    It backs up and resets QM's per-user memory, which is injected into every
-   agent turn, to the onboarding marker, and archives every open QM session.
+   agent turn, to the onboarding marker, archives every open QM session, and
+   renames apps the agent published earlier to `rehearsal-archive-…` (QM's web
+   API cannot archive them). It stops the previous run's background jobs.
    It moves all earlier-run files out of the agent computer to
    `artifacts/rehearsal-archive/<time>/`, installs a fresh
    `/root/workspace/trailhead-storefront` with one Git commit, and runs a leak
@@ -53,7 +55,11 @@ Earlier runs must leave nothing the agent could read, or the demo is no longer
    GBrain: no pages.
    QM memory: onboarding marker only.
    QM sessions open: 0
+   QM published apps from earlier runs: 0
    ```
+
+   Run the GBrain step first: the backup it writes inside the agent computer is
+   swept out by `install`.
 
    `npm run trailhead -- scan` repeats only the check.
 

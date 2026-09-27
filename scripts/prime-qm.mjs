@@ -8,16 +8,20 @@ import { client } from './qm-session.mjs';
 const out = process.argv[2];
 if (!out) { console.error('usage: node scripts/prime-qm.mjs <backup-dir> | --check'); process.exit(2); }
 const KEEP = '## Onboarding\n- Onboarding: completed v2 on 2026-09-27.\n';
+// Published apps cannot be archived through the web API; renaming frees the name the agent might reuse.
+const ARCHIVED = 'rehearsal-archive-';
 
 const api = await client();
 if (out === '--check') {
   const memory = await (await api.get('/api/memory')).json();
   const listed = await (await api.get('/api/sessions')).json();
   const open = (listed.sessions ?? listed).filter(s => !s.archived);
-  await api.dispose();
   console.log(memory.content === KEEP ? 'QM memory: onboarding marker only.' : `QM memory holds earlier notes:\n${memory.content}`);
   console.log(`QM sessions open: ${open.length}${open.length ? ` (${open.map(s => s.title).join('; ')})` : ''}`);
-  process.exit(memory.content === KEEP ? 0 : 1);
+  const apps = ((await (await api.get('/api/deployments')).json()).deployments ?? []).filter(d => !String(d.name).startsWith(ARCHIVED));
+  console.log(`QM published apps from earlier runs: ${apps.length}${apps.length ? ` (${apps.map(d => d.name).join(', ')})` : ''}`);
+  await api.dispose();
+  process.exit(memory.content === KEEP && !open.length && !apps.length ? 0 : 1);
 }
 mkdirSync(out, { recursive: true });
 try {
@@ -39,6 +43,14 @@ try {
     if (!r.ok()) throw new Error(`archiving session ${s.id} failed: HTTP ${r.status()}`);
   }
   console.log(`QM sessions: archived ${sessions.length} (list in ${out}/qm-sessions.json)`);
+  const apps = ((await (await api.get('/api/deployments')).json()).deployments ?? []).filter(d => !String(d.name).startsWith(ARCHIVED));
+  const stamp = new Date().toISOString().replace(/[-:]/g, '').slice(0, 13).toLowerCase();
+  writeFileSync(`${out}/qm-apps.json`, JSON.stringify(apps.map(({ gitUrl, ...d }) => d), null, 2));
+  for (const [i, d] of apps.entries()) {
+    const r = await api.post(`/api/deployments/${encodeURIComponent(d.id)}/name`, { data: { name: `${ARCHIVED}${stamp}-${i + 1}` } });
+    if (!r.ok()) throw new Error(`renaming published app ${d.name} failed: HTTP ${r.status()} ${await r.text()}`);
+  }
+  console.log(`QM published apps: renamed ${apps.length} to ${ARCHIVED}… (list in ${out}/qm-apps.json)`);
 } finally {
   await api.dispose();
 }

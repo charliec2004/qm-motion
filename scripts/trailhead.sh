@@ -88,7 +88,15 @@ fi
 # 1. Everything an earlier run could leave, except QM's own workspace files, the
 #    motion CLI, environment-smoke evidence and live background jobs.
 list=$(python3 scripts/computer.py bash -s <<'REMOTE'
+# Stop the previous run's background jobs (dev servers, previews) so their logs can be archived.
+for d in /root/.agent-proc/*/; do
+  pid=$(cat "$d/pid" 2>/dev/null || true)
+  [[ "$pid" =~ ^[0-9]+$ ]] || continue
+  pkill -P "$pid" 2>/dev/null || true
+  kill "$pid" 2>/dev/null || true
+done
 for pid in $(pgrep -f '[n]ode_modules/.bin/vite' || true); do kill "$pid" 2>/dev/null || true; done
+sleep 1
 keep='.agent-turn apis.json artifacts browser-smoke.mjs conversations.json convos deployments.json files.json loops.json motion projects.json qm-computer-proof.txt qm-ui-proof.txt skills'
 for p in /root/workspace/* /root/workspace/.[!.]*; do
   [[ -e "$p" ]] || continue
