@@ -64,8 +64,10 @@ Every doc uses these words in exactly these senses.
    multiple moments. A video filename or PNG path in a text result is insufficient.
 2. Evidence includes viewport, browser/version, application revision, reset
    state, interaction steps, action/frame timing, and capture limitations.
-3. The agent inspects a relevant interval or region, relates observations to
-   application code, and makes a justified edit without being given the fix.
+3. The agent inspects a relevant interval or region and correctly describes
+   what happens on screen, citing trigger-relative times from the trace and
+   the frames it viewed. This is the tool's job: making the problem visible
+   and measurable.
 4. The same interaction is repeated from reset state. Before/after views align
    to the interaction trigger and show whether the user's intended behavior is
    satisfied. Pixel differences report change, not quality.
@@ -78,6 +80,11 @@ The prerequisite environment checks are distinct: authenticated model reply,
 real agent command execution, browser screenshot/recording, identified vision
 delivery path, durable scoped memory, service lifecycle, and clean private Git
 repository. See [setup.md](setup.md) and [PROGRESS.md](../PROGRESS.md).
+
+**Demo goal, not a tool requirement:** the agent also relates what it saw to
+the application code, makes a justified change without being given the fix,
+and shows the result with before/after takes. Whether it succeeds depends on
+the model, not on the motion tools. See [demo.md](demo.md).
 
 ## Non-goals
 

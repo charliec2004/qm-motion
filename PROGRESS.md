@@ -85,7 +85,8 @@ Pre-build investigation, September 27, 9:20–10:55 AM PT:
   missing; MCP drops images.
 - **API probe** (real call, outside QM). `gpt-6-sol` on the Responses API read
   a withheld six-digit code from a PNG returned as a tool result, in 2 of 2
-  variants; `artifacts/openai-tool-image-probe/`.
+  variants. A second probe ran pi's own library inside the QM core container
+  and passed the same way. `artifacts/openai-tool-image-probe/`.
 - **Deployment facts** (read from code and live config). The security posture
   is `auto`, but screening is off, so there is no notice on tool images. The
   web chat shows attached PNG/JPEG/WebP inline; video gets a download card.

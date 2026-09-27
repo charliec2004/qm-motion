@@ -138,3 +138,10 @@ computer the same day: the npm registry is reachable; the latest
 `18.0.0-rc.0`. The demo's `legacy-peer-deps=true` makes install warn rather
 than fail. Unverified: whether 1.2.20 removes the rebound. Never give the
 agent a diagnosis or the fixing version.
+
+Latency affects only the demo and test tooling, not the motion tools. One cold
+command turn took 78.467s, and a full capture → fix → compare loop in one
+turn is unmeasured and likely takes minutes. That is longer than the 60–90
+second slot, so plan to show a labelled recording of a real run. The
+`qm-turn.mjs` 240-second abort is lifted with `--timeout`
+([spec §2](spec.md#2-running-real-turns)).

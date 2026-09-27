@@ -197,8 +197,15 @@ present) and its bundled pi 0.82.0 packages. Paths below are in that source.
 exact shape pi produces. The model read a withheld six-digit code correctly,
 both when continuing by `previous_response_id` and when resending the full
 history. The probe and result are in ignored
-`artifacts/openai-tool-image-probe/`. This call bypassed QM and pi. **No QM
-turn has yet received a tool-returned image.**
+`artifacts/openai-tool-image-probe/`.
+
+**pi's own path works too (tested inside core).** `pi-probe.mjs` ran in the
+`qm-qm-motion-core` container, using the `pi-ai` copy that the agent loop
+imports. It used a model object cloned from `gpt-5.5` as `gpt-6-sol`, as QM
+does. After a real tool call, a `toolResult` message with a PNG image block
+was sent back, and the model read a withheld code correctly. **Still
+unexercised:** QM's `defineTool`/`recordResult` wrapper (pass-through by code
+reading) and the `motion_view` patch itself.
 
 **Already works, unchanged.** A tool that returns an image block reaches
 GPT-6 Sol as pixels:
