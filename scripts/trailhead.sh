@@ -40,7 +40,7 @@ if [[ "$action" == scan ]]; then scan; exit $?; fi
 #    motion CLI, environment-smoke evidence and live background jobs.
 list=$(python3 scripts/computer.py bash -s <<'REMOTE'
 for pid in $(pgrep -f '[n]ode_modules/.bin/vite' || true); do kill "$pid" 2>/dev/null || true; done
-keep='apis.json artifacts browser-smoke.mjs conversations.json convos deployments.json files.json loops.json motion projects.json qm-computer-proof.txt qm-ui-proof.txt skills'
+keep='.agent-turn apis.json artifacts browser-smoke.mjs conversations.json convos deployments.json files.json loops.json motion projects.json qm-computer-proof.txt qm-ui-proof.txt skills'
 for p in /root/workspace/* /root/workspace/.[!.]*; do
   [[ -e "$p" ]] || continue
   [[ " $keep " == *" $(basename "$p") "* ]] || echo "${p#/}"
