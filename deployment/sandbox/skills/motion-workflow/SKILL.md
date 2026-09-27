@@ -42,8 +42,17 @@ option. Every command prints one JSON object with a `next` hint.
 - Report every take, including ones where the defect did not appear, and any
   compare warnings. Frame rate is not proof of smoothness.
 - Cite the take ID, table row times and the sheet frames (`#N`) you viewed.
-- Attach the key sheets (PNG) to your reply with the `attach` tool so the user
-  sees them inline.
+
+## Show the user a video, not sheets
+
+Sheets and tables are your evidence; the user watches a video. After compare,
+pick one representative before take and one after take and run
+`node /root/workspace/motion/cli.mjs video --before <id> --after <id> --from <ms> --to <ms>`
+with the window around the moment that matters (it plays at real speed, then
+in slow motion over that window, with the cursor drawn). Attach the printed
+`player` (plays inline in chat) and `video` (MP4 download) with `attach`. Do
+not attach sheets unless the user asks for them. You cannot see the video;
+describe only what the table and the sheets you viewed show.
 
 ## Case record (last step)
 

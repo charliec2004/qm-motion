@@ -91,6 +91,16 @@ machine. The motion product is intentionally not implemented by this kickoff.
   workspace rebounded 3/3 (probe deleted). Not yet run with the agent. GBrain
   still holds the rehearsal case; soft-delete it before a clean run. Prompts:
   [demo.md](docs/demo.md#agent-built-target-trailhead).
+- **`motion video` for people, 3:30 PM (not yet deployed or run by the agent).**
+  Builds a 60 fps H.264 MP4 from takes' captured frames: real speed over the
+  record window, then slow motion over `--from/--to`, before/after side by
+  side, a cursor and click ripple drawn from the trigger position that capture
+  now records (`manifest.trigger.x/y/key`). Every captured frame is shown for
+  at least one video frame. Also writes `player.html` (MP4 as a data URI) for
+  inline chat playback; that iframe playback is inferred, not tested. The skill
+  now attaches the player and MP4 instead of sheets. Host check on a scratch
+  storefront copy: the one-frame reopen shows for exactly 1 video frame at real
+  speed and 4 in 1/4× slow motion; render took ~10 s. Probes deleted.
 
 ## Working foundation
 
@@ -178,6 +188,10 @@ Pre-build investigation, September 27, 9:20–10:55 AM PT:
 - **Deployment facts** (read from code and live config). The security posture
   is `auto`, but screening is off, so there is no notice on tool images. The
   web chat shows attached PNG/JPEG/WebP inline; video gets a download card.
+  (Corrected 3:30 PM from the deployed bundle: images on the allowlist, GIF
+  and animated WebP included, render as `<img>` capped at 320 px; `.html`
+  renders inline in a sandboxed 360 px iframe; core types `.mp4`/`.webm` as
+  `application/octet-stream`, and there is no `<video>` path.)
   `threadRef` names continue conversations, and the default is one shared
   thread. After a sandbox image rebuild: `npm stop && npm start`, one agent
   command, then `python3 scripts/connect-gbrain.py` for GBrain. Skills deploy with

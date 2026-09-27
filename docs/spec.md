@@ -481,6 +481,30 @@ section 6.
 - **What it does not do:** it never states whether the defect is present, and
   it applies no thresholds or "jump" flags; the agent judges each take.
 
+## 7b. `motion video` (for people)
+
+`video <take-id>` or `video --before <take-id> --after <take-id>
+[--from <ms>] [--to <ms>] [--slow 4]` writes
+`artifacts/motion/video-<utc>-<rand>/` with `before-after.mp4` (or
+`<take-id>.mp4`), `player.html` and `video.json`. It is built only from the
+takes' saved frames; capture, inspect and compare are unchanged.
+
+- **Timeline:** real speed from `-recordBeforeMs` to `recordAfterMs`, a 0.6 s
+  hold, then `--from..--to` (default the whole take) at 1/`slow` speed, a hold.
+  60 fps H.264, yuv420p, faststart.
+- **Frame choice:** the latest frame captured at or before the source time,
+  advancing at most one frame per video frame, so every captured frame is on
+  screen at least once.
+- **Overlay:** speed badge, ms-from-trigger clock, panel titles with take ID
+  and revision, and a cursor plus click ripple at `manifest.trigger.x/y`
+  (a key badge for press triggers). Takes captured before the position was
+  recorded get no cursor and a caveat.
+- **Refuses:** more than one ID per side, and takes whose url, viewport, scale,
+  reduced motion or trigger differ.
+- **Delivery:** QM chat offers MP4 only as a download; `player.html` embeds it
+  as a data URI for the inline HTML preview. The model never sees the video;
+  `motion_view` refuses non-image files.
+
 ## 7a. Chrome animation details (optional; cut early)
 
 If time allows, `motion capture` also enables the CDP `Animation` domain

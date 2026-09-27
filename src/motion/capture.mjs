@@ -17,7 +17,8 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 function installSampler({ watch, events }) {
   const M = (window.__motion = { samples: [], trigger: null, running: true });
   const onEvent = e => {
-    if (!M.trigger) M.trigger = { event: e.type, timeStamp: e.timeStamp, wallMs: performance.timeOrigin + e.timeStamp };
+    if (!M.trigger) M.trigger = { event: e.type, timeStamp: e.timeStamp, wallMs: performance.timeOrigin + e.timeStamp,
+      x: e.clientX ?? null, y: e.clientY ?? null, key: e.key ?? null };
   };
   for (const type of events) document.addEventListener(type, onEvent, true);
   const read = w => {
@@ -128,7 +129,7 @@ async function oneTake(chromium, playwrightVersion, scenario, label, n) {
       takeId: id, label, n, scenario, reset: RESET,
       browser: browser.version(), playwrightVersion,
       app: gitInfo(scenario.appDir),
-      trigger: { event: trig?.event ?? null, wallMs: trig?.wallMs ?? null },
+      trigger: { event: trig?.event ?? null, wallMs: trig?.wallMs ?? null, x: trig?.x ?? null, y: trig?.y ?? null, key: trig?.key ?? null },
       frameCount: frames.length, traceSampleCount: trace.length,
       sampler: 'rAF getBoundingClientRect + computed style', timingSource: TIMING, startedAt,
     };
