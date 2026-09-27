@@ -3,7 +3,7 @@ set -euo pipefail
 TASK_ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$TASK_ROOT"
 action=${1:-status}
-case "$action" in install|status|scan) ;; *) echo 'Usage: npm run trailhead -- [install|status|scan]' >&2; exit 2 ;; esac
+case "$action" in install|status|scan|probe) ;; *) echo 'Usage: npm run trailhead -- [install|status|scan|probe [url]]' >&2; exit 2 ;; esac
 if [[ ! -d node_modules/playwright || ! -f deployment/.env ]]; then
   echo "Run this from the primary checkout (it needs node_modules and deployment/.env); $TASK_ROOT has neither." >&2
   exit 2
@@ -43,6 +43,46 @@ REMOTE
   exit 0
 fi
 if [[ "$action" == scan ]]; then scan && exit 0 || exit 1; fi
+
+# Operator check after the build prompt: does the agent's FAQ show the close rebound?
+# Records closing the open question 3 times from outside the workspace, prints the
+# answer height at the end of each close, then deletes the takes so the agent never sees them.
+if [[ "$action" == probe ]]; then
+  python3 scripts/computer.py bash -s -- "${2:-http://localhost:5173/faq}" <<'REMOTE'
+set -euo pipefail
+url=$1
+scenario=/root/probe-close.json
+cleanup() { rm -rf /root/workspace/artifacts/motion/*-opprobe-* "$scenario"; }
+trap cleanup EXIT
+target=$(node -e '
+const { chromium } = require("/opt/qm-motion/node_modules/playwright");
+(async () => {
+  const b = await chromium.launch({ executablePath: "/usr/bin/chromium" });
+  const p = await b.newPage();
+  await p.goto(process.argv[1]); await p.waitForTimeout(600);
+  const id = await p.locator("button[aria-expanded=true][aria-controls]").first().getAttribute("aria-controls", { timeout: 5000 });
+  console.log(id); await b.close();
+})().catch(e => { console.error(`no open accordion question at ${process.argv[1]}: ${e.message.split("\n")[0]}`); process.exit(1); });' "$url")
+cat > "$scenario" <<J
+{"name":"operator-probe","url":"$url","viewport":{"width":960,"height":720},"ready":{"selector":"[aria-controls=\"$target\"]","settleMs":400},
+"trigger":{"action":"click","selector":"[aria-controls=\"$target\"]"},
+"watch":[{"name":"answer","selector":"#$target"}],"recordBeforeMs":100,"recordAfterMs":700}
+J
+cd /root/workspace
+node motion/cli.mjs capture --scenario "$scenario" --label opprobe --takes 3 > /tmp/opprobe.json 2>/dev/null || { cat /tmp/opprobe.json; rm -f /tmp/opprobe.json; exit 1; }
+rm -f /tmp/opprobe.json
+for t in $(ls artifacts/motion | grep -- '-opprobe-'); do
+  node -e '
+const trace = require(`/root/workspace/artifacts/motion/${process.argv[1]}/trace.json`);
+const pts = trace.filter(s => s.msFromTrigger >= 0).map(s => ({ ms: s.msFromTrigger, h: s.elements.answer?.hidden || !s.elements.answer ? null : s.elements.answer.height }));
+let min = Infinity, rebound = null;
+for (const p of pts) { if (p.h === null) break; if (p.h < min) min = p.h; else if (p.h - min > 5 && !rebound) rebound = { ...p, from: min }; }
+const tail = pts.filter(p => p.ms > 200 && p.ms < 360).map(p => `${p.ms.toFixed(0)}ms:${p.h === null ? "hidden" : p.h.toFixed(1)}`).join("  ");
+console.log(rebound ? `REBOUND at +${rebound.ms.toFixed(0)} ms (${rebound.from.toFixed(1)} -> ${rebound.h.toFixed(1)} px)` : "no rebound", "|", tail);' "$t"
+done
+REMOTE
+  exit $?
+fi
 
 # 1. Everything an earlier run could leave, except QM's own workspace files, the
 #    motion CLI, environment-smoke evidence and live background jobs.
