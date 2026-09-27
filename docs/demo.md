@@ -171,14 +171,12 @@ workspace rebounded in 3/3 takes (probe deleted).
 Each prompt goes in the same new web session:
 
 1. *Build.* "Picking up a ticket from our PM: add an FAQ page to the Trailhead
-   storefront in /root/workspace/trailhead-storefront. Follow the repo's
-   existing packages and conventions (see CONTRIBUTING.md). Five questions
-   (shipping, returns, sizing, warranty, gift cards), first one open when the
-   page loads, only one open at a time, and items should animate open and
-   closed smoothly. Put it at /faq and link it from the footer. Run the dev
-   server on port 5173 and keep it running, and commit when it's done. Just
-   get it standing up for now, no motion recordings yet, I'll do a review pass
-   with you next."
+   storefront. Follow our existing packages and conventions. Five questions
+   (shipping, returns, sizing, warranty, gift cards), first one open by
+   default, one open at a time, and they should animate open and closed
+   smoothly. Link it from the footer, keep the dev server running, and commit
+   when done. Just get it standing up, no motion recordings yet, I'll review
+   it with you next."
 2. *Review.* "Nice. Before I send this to the PM, can you do a proper code
    review? Correctness, accessibility, and whether the accordion animation is
    implemented right. Just read through the code and check the page loads. Let
