@@ -56,10 +56,11 @@ can affect rendering; no smoothness claim follows from nominal FPS. The full
    device scale 1. Fresh navigation opens the first question. Wait at least
    `350ms`, then click **What comes with a Field Notes membership?** once.
    Observe the end of its `250ms` close and the questions beneath it.
-5. Between before/after captures, navigate fresh; keep viewport, motion settings,
-   dependencies, and click target fixed. Capture roughly 3 seconds including
-   the settled opening state, click, and at least 700ms after the click. Preserve
-   actual trigger/frame timestamps and browser/source versions.
+5. Between before/after takes, start fresh; keep viewport, motion settings,
+   dependencies and click target fixed. The saved scenario records 300 ms
+   before and 800 ms after the click ([spec §4](spec.md#4-scenario-file)).
+   Preserve actual trigger and frame timestamps and browser and source
+   versions.
 
 `npm run demo -- status` reports the workspace and the operator-managed process.
 `npm run demo` reuses a running operator server or restarts it in the same
@@ -143,5 +144,6 @@ Latency affects only the demo and test tooling, not the motion tools. One cold
 command turn took 78.467s, and a full capture → fix → compare loop in one
 turn is unmeasured and likely takes minutes. That is longer than the 60–90
 second slot, so plan to show a labelled recording of a real run. The
-`qm-turn.mjs` 240-second abort is lifted with `--timeout`
+`qm-turn.mjs` 240-second abort will be lifted by the `--timeout` flag that
+milestone 1 adds
 ([spec §2](spec.md#2-running-real-turns)).

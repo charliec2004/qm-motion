@@ -102,9 +102,9 @@ Pre-build investigation, September 27, 9:20–10:55 AM PT:
   does not widen it. Raw screencast is now the chosen capture primitive.
   Evidence is in ignored `artifacts/motion-spike/`.
 
-Details and constraints (images last one turn, size budget, sandbox rebuild
-recreates the computer) are in
-[architecture.md](docs/architecture.md#image-delivery-verified-by-reading-the-code).
+Details: [image delivery](docs/architecture.md#image-delivery-verified-by-reading-the-code),
+[sandbox rebuilds](docs/architecture.md#sandbox-image-changes), and the exact
+contracts in [spec.md](docs/spec.md).
 The first coding task is `motion-evidence-image.patch` plus a real withheld-code
 turn; then follow [plan.md](docs/plan.md). There is no completed before/after
 repair or measured full 90-second product demo yet.

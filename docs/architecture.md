@@ -22,7 +22,7 @@ The user asks QM's agent about a visual problem. In **one turn**, the agent:
    `motion_view` the model gets only a file path.
 4. **Diagnoses and edits** the application itself. How to fix is the agent's
    decision; the motion tools only provide evidence.
-5. **Repeats and compares**: new takes from reset state, then `motion compare`
+5. **Repeats and compares**: new fresh takes, then `motion compare`
    builds a sheet aligned on the trigger; `motion_view` shows it.
 6. **Reports**: optionally attaches sheets to its reply with QM's existing
    `attach` tool, and writes a short case to GBrain. A memory failure is
@@ -37,7 +37,7 @@ flowchart LR
     User[User in QM chat] --> Agent[QM agent: pi + gpt-6-sol]
     Agent -- execute --> CLI[motion capture / inspect / compare]
     CLI --> Chrome[Chromium + target app, same computer]
-    CLI --> Files[artifacts/motion/run-id/: frames, manifest, sheets]
+    CLI --> Files[artifacts/motion/take-id/: frames, trace, manifest, sheets]
     Files -- motion_view --> Agent
     Agent -- attach --> User
     Agent -- gbrain CLI --> Brain[GBrain server + PostgreSQL]
@@ -58,9 +58,9 @@ Three pieces. Everything else already exists.
 
 | Command | Input | Output |
 | --- | --- | --- |
-| `motion capture` | A saved scenario file (URL, viewport, ready condition, trigger target, elements to watch, recording length) and a label | Run ID; `artifacts/motion/<run-id>/` containing the frames, `frames.json` (Chrome timestamps), `trace.json` (per-frame values of watched elements) and `manifest.json` |
-| `motion inspect` | Run ID, `--from`/`--to` in ms from the trigger, optional `--crop x,y,w,h` | A text table of changed trace values, plus one sheet PNG. Invalid windows fail clearly. |
-| `motion compare` | The run IDs of the before takes and the after takes (three or more each), same window and crop | One table per take plus one sheet with one row per take, aligned on the trigger. Mismatched viewport, browser or URL is rejected. |
+| `motion capture` | A saved scenario file (URL, viewport, ready condition, trigger target, elements to watch, recording length) and a label | Take ID; `artifacts/motion/<take-id>/` containing the frames, `frames.json` (Chrome timestamps), `trace.json` (per-frame values of watched elements) and `manifest.json` |
+| `motion inspect` | Take ID, `--from`/`--to` in ms from the trigger, optional `--crop x,y,w,h` | A text table of changed trace values, plus one sheet PNG. Invalid windows fail clearly. |
+| `motion compare` | The take IDs of the before takes and the after takes (three or more each), same window and crop | One table per take plus one sheet with one row per take, aligned on the trigger. Mismatched viewport, browser or URL is rejected. |
 
 The scenario is data, not code: the tool knows nothing about Field Notes or
 its bug. One scenario file for the Field Notes close interaction is enough for
@@ -160,9 +160,10 @@ skip a one-frame defect.
 
 **Numbers first.** Each take also records a per-frame trace of the watched
 elements, sampled in the page with `requestAnimationFrame`, so it uses the
-page's own clock. The spike's logger did exactly this. In all 24 logged
-agent-browser runs, across three consecutive frames the panel height went
-under 1px (0 or 0.59px), then 76.78px, then hidden. The
+page's own clock. The spike's logger did exactly this. In all 24 logged runs
+of the agent-browser test set (10 with agent-browser open but not recording,
+14 recording), across three consecutive samples the panel height went under
+1px (0 or 0.59px), then 76.78px, then hidden. The
 trace is exact and cheap to read as text; the sheet confirms what numbers
 cannot show. **Not adopted:** pausing animations and seeking to checkpoints.
 The rebound happens right after the 250ms close animation ends (measured
@@ -171,15 +172,9 @@ a clean close. Seeking also does not fire `animationend` naturally.
 Real-time capture is the primary method; seeking is on the
 [roadmap](roadmap.md).
 
-A proposed run directory in the computer's durable workspace is
-`artifacts/motion/<run-id>/`, containing `manifest.json`, the screencast frames
-with their timestamps, an optional assembled video for people, and derived
-sheets. The manifest records app commit plus dirty patch identity,
-browser/version, viewport/device scale, URL, initial state, reset procedure,
-interaction steps, trigger/action times, available capture/frame times, and
-artifact hashes. Preserve actual timing; distinguish encoded presentation
-timestamps and estimated times from observed capture times. Do not reconstruct
-precise browser timing solely as `frameIndex / requestedFPS`.
+Each take's folder, files and manifest fields are defined in
+[spec §5](spec.md#5-motion-capture). Preserve actual timing: never reconstruct
+browser timing as `frameIndex / requestedFPS`.
 
 Copy/export presentation evidence through supported QM attachments, retaining
 the durable workspace reference and digest. Host smoke evidence lives under
@@ -272,24 +267,12 @@ the running image, not that checkout.
 - *Syntax.* Core runs TypeScript through Node type stripping; the patch must
   use erasable syntax only (no enums, namespaces or parameter properties).
 
-**Proposed patch** (unimplemented): `deployment/runtime/patches/
-motion-evidence-image.patch`, applied after the two existing patches by
-filename order and touching different files.
-
-1. `primitives.ts`: an optional `readBytes(path, signal)` on `ToolContext` that
-   provisions the handle and calls `deps.sandbox.readFileBytes`. No skill,
-   shared-file or memory paths.
-2. `agent-tools.ts`: a `motion_view({path})` tool. It accepts only
-   `artifacts/motion/<run>/<file>.png|jpg|webp` without `..`, checks magic
-   bytes and the size limits, and returns text metadata (path, bytes,
-   SHA-256) plus one image block. Missing, oversized, out-of-scope or invalid files return
-   clear `isError` text. Register it in the `tools` list; all other reads stay
-   unchanged.
-3. Rebuild with `npm start` (`qm up --build-from runtime`). Confirm the patch
-   text inside the running container and a healthy core before any turn.
-
-Proof requires a real turn to report a withheld random code visible only in
-the returned image, plus the four failure cases. Filename echoes do not pass.
+**The patch** (unimplemented) is
+`deployment/runtime/patches/motion-evidence-image.patch`. It applies after the
+two existing patches by filename order, touches different files, and is
+specified exactly in [spec §1](spec.md#1-motion_view-qm-core-patch). Proof is
+one real turn reporting a withheld code visible only in the returned image
+([spec §10](spec.md#10-tests)). Filename echoes do not pass.
 
 ## Deployment notes
 
@@ -341,8 +324,8 @@ The compact case contains request, app revision, reproduction/reset, observed
 intervals, diagnosis, fix, verification, and evidence references. Write it
 after visual reporting; retry independently if memory is down.
 
-Reset before each take and align runs to the interaction trigger. Reject or
-label changed viewport, browser, app state, or interaction. A diff measures
+Every take is a fresh take, aligned to the trigger. Reject or label a changed
+viewport, browser, app state or interaction. A diff measures
 change, while the agent evaluates intent. Capture can affect performance;
 nominal FPS cannot prove smoothness. Any optional layout-shift instrumentation
 must retain click-induced movement instead of applying CLS's recent-input

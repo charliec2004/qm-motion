@@ -22,7 +22,7 @@ the presence of a script or configuration file.
   and agent command execution have passed.
 - One local Docker agent computer with a durable workspace; stock Chromium and
   the application dev server run in that same computer.
-- Short captures, roughly 3–10 seconds, from Chrome's raw screencast through
+- Short takes (about 1 second around the trigger), from Chrome's raw screencast through
   Playwright (measured choice; see [architecture.md](architecture.md#capture-measured)).
   FFmpeg builds bounded sheets and aligned before/after evidence.
 - One real interaction defect: Field Notes reproduces historical Radix
@@ -48,10 +48,14 @@ Every doc uses these words in exactly these senses.
 | **Target** | The app under investigation. For the MVP, Field Notes ([demo.md](demo.md)). |
 | **Scenario** | A saved data file describing one interaction: URL, viewport, when the page is ready, what to click, and how long to record afterwards. |
 | **Trigger** | The user action a take is aligned to, such as the click. Times are given in ms from the trigger. |
-| **Take** (or **run**) | One recording of a scenario from a fresh page. Each has a run ID and a folder `artifacts/motion/<run-id>/`. |
-| **Frame** | One screenshot Chrome delivers during a take, with Chrome's own timestamp. |
+| **Take** | One recording of a scenario. Each has a **take ID** and a folder `/root/workspace/artifacts/motion/<take-id>/` in the computer. (QM's own "run" is a separate thing: one agent turn's record.) |
+| **Fresh take** | How every take starts: a new Chromium process, a new browser context and a fresh navigation. Not the same as a source reset. |
+| **Source reset** | `npm run demo -- reset`: a new pristine copy of the demo app. Done once before a real investigation, never between before and after takes. |
+| **Frame** | One screenshot Chrome delivers during a take, with Chrome's own timestamp. (A *display frame* is one screen refresh, about 16.7 ms; "a one-frame defect" means one display frame.) |
+| **Sample** | One entry in the trace, taken once per display frame in the page. |
 | **Watched element** | An element named in the scenario whose size, position and visibility are traced every frame. |
-| **Trace** | The per-frame record of watched elements during a take (`trace.json`), timed on the page's own clock. `motion inspect` prints it as a short **table** of the frames where something changed. |
+| **Trace** | The per-sample record of watched elements during a take (`trace.json`), timed on the page's own clock. `motion inspect` prints it as a short **table** of the samples where something changed. |
+| **`motion capture`** (and `inspect`, `compare`) | Shorthand for `node /root/workspace/motion/cli.mjs capture …` in the computer. There is no `motion` executable. |
 | **Manifest** | The take's record of what was captured and how: app revision, browser version, viewport, trigger time, timing source, file hashes. |
 | **Sheet** | One small PNG grid of frames from a chosen window (and optional crop), labelled in ms from the trigger. The model reads the table first, then views the sheet to confirm. |
 | **Rebound** | The Field Notes defect: while closing, the answer panel pops fully open again for exactly one frame, then disappears (Radix issue #1074). |
@@ -68,7 +72,7 @@ Every doc uses these words in exactly these senses.
    what happens on screen, citing trigger-relative times from the trace and
    the frames it viewed. This is the tool's job: making the problem visible
    and measurable.
-4. The same interaction is repeated from reset state. Before/after views align
+4. The same interaction is repeated as fresh takes. Before/after views align
    to the interaction trigger and show whether the user's intended behavior is
    satisfied. Pixel differences report change, not quality.
 5. The user sees durable, accessible evidence and an honest result, including

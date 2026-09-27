@@ -9,6 +9,26 @@ test procedures are in [spec.md](spec.md). Terms are defined in
 
 Budget: September 27, 2026, 1:15–5:00 PM Pacific, **225 minutes**.
 
+## How to work (hackathon rules)
+
+- **Build, don't re-investigate.** Everything under "Already settled" below
+  is proven. Do not spike, benchmark or re-test it; go straight to the code.
+- **One check per milestone.** Each milestone's "done when" is the only
+  required check. No extra harnesses, test suites or coverage work. If a
+  check fails, fix the code and rerun that same check.
+- **The spec is the default, not a cage.** If something simpler meets the
+  same "done when", do it, and change [spec.md](spec.md) in one line so the
+  docs stay true. Never weaken the core rules: real image delivery, no
+  sampling of frames in a window, no supplied diagnosis.
+- **Timebox.** If a milestone runs 15 minutes over, cut scope using the cut
+  order below rather than polishing.
+- **Run from the primary checkout.** Services, `npm` scripts, `.state/`,
+  `deployment/.env`, `node_modules` and `artifacts/` live in the primary
+  checkout (on this machine `/home/charlie/home/charlie/Documents/CODE/yc-hacks-9-27`).
+  Git worktrees lack these ignored files and cannot run anything. Edit and
+  commit wherever you like, but run from there. Spike evidence (including
+  `artifacts/motion-spike/scripts/pw-alt.mjs`) is only there too.
+
 ## Where we start
 
 Before the build window, both risky foundations were checked:
@@ -23,20 +43,35 @@ Before the build window, both risky foundations were checked:
 
 Nothing in [What we build](architecture.md#what-we-build) exists yet.
 
+**Already settled; do not re-verify:**
+
+- The capture method: raw CDP screencast plus a rAF trace, with launch
+  code in `artifacts/motion-spike/scripts/pw-alt.mjs`.
+- GPT-6 Sol reading images inside tool results, directly and through pi
+  inside QM core.
+- The Field Notes locators, tested on the live page.
+- The FFmpeg label and tile commands.
+- How skills deploy (`npm start`), and how to restart after a sandbox rebuild.
+- That QM's tool layer cannot install files on the local backend.
+
 ## Milestones
 
-Each milestone leaves something demonstrable. "Real turn" means an actual QM
-conversation with GPT-6 Sol, not a script calling our code directly.
+Each milestone leaves something demonstrable. A **real turn** is an actual QM
+conversation turn with GPT-6 Sol ([spec §2](spec.md#2-running-real-turns)),
+not a script calling our code directly. "Run directly" means
+`npm run computer -- node /root/workspace/motion/cli.mjs …`, with no QM turn.
 
 | # | Minutes | Build | Done when |
 | --- | --- | --- | --- |
-| 1 | 0–30 | `motion_view` core patch ([spec §1](spec.md#1-motion_view-qm-core-patch)); `qm-turn.mjs` flags ([§2](spec.md#2-running-real-turns)); deploy with `npm start` | [Spec §10](spec.md#10-tests) tests 1–4 pass: a real turn reports a random code visible only inside the PNG, and the four bad paths each return the right error. |
-| 2 | 30–60 | `motion capture` with the trace sampler, and the Field Notes scenario ([spec §3–5](spec.md#5-motion-capture)) | One take produces frames, `frames.json` with Chrome timestamps, `trace.json` for the watched elements, and a manifest with app revision, browser version, viewport, trigger time and timing source. Three takes' traces show the one-frame reopen measured in the spike. |
-| 3 | 60–80 | `motion inspect` ([spec §6](spec.md#6-motion-inspect)) | A real turn captures, reads the table, views the sheet, and describes the reopened frame. Labels are ms from the trigger; invalid windows fail; sheet ≤ ~1 MB. |
-| 4 | 80–120 | Guidance skill ([spec §8](spec.md#8-agent-guidance-deploymentsandboxskillsmotion-workflowskillmd)); `npm run demo -- reset`, then the server is handed to the agent ([spec §2](spec.md#2-running-real-turns)) | **Tool success:** in a real turn the agent reproduces the rebound and describes it correctly from the table and sheet, citing the frame. **Demo goal** (not required for the tool): it also finds the cause and makes a change it justifies. No diagnosis is supplied. |
-| 5 | 120–155 | `motion compare` ([spec §7](spec.md#7-motion-compare)); three or more takes per side | Per-take tables and a trigger-aligned before/after sheet show every take, and the agent judges each take. Mismatched runs are rejected or visibly labelled. |
-| 6 | 155–175 | Case write and retrieval ([spec §9](spec.md#9-gbrain-case)) | A fresh turn retrieves the case by a unique marker. With memory made unavailable, capture and inspection still work and the failure is reported. |
-| 7 | 175–225 | Rehearse, fix failures, freeze | Full-loop latency measured from reset; a labelled recording of a real successful run exists; PROGRESS.md updated. See [demo.md](demo.md). |
+| 1 | 0–30 | `motion_view` core patch ([spec §1](spec.md#1-motion_view-qm-core-patch)); `qm-turn.mjs` flags ([§2](spec.md#2-running-real-turns)); deploy with `npm start` | **One real turn** reports a random code visible only inside a PNG returned by `motion_view` ([spec §10](spec.md#10-tests)). |
+| 2 | 30–60 | `motion capture` with the trace sampler and the Field Notes scenario ([spec §3–5](spec.md#5-motion-capture)) | Run directly in the computer (no QM turn): `--takes 3` writes frames, `frames.json`, `trace.json` and a manifest, and the traces show the one-frame reopen. |
+| 3 | 60–80 | `motion inspect` ([spec §6](spec.md#6-motion-inspect)) | Run directly: prints the table and writes a sheet under the size limits for a take from milestone 2. |
+| 4 | 80–100 | `motion compare` ([spec §7](spec.md#7-motion-compare)) | Run directly on the milestone 2 takes: tables plus one sheet, and a mismatched run is refused. |
+| 5 | 100–160 | Guidance skill ([spec §8](spec.md#8-agent-guidance-deploymentsandboxskillsmotion-workflowskillmd)); `npm run demo -- reset`; the server is handed to the agent ([spec §2](spec.md#2-running-real-turns)) | **The real run:** in one turn the agent captures, reads the table, views the sheet and correctly describes the rebound, citing the frame (tool success). It writes the GBrain case ([spec §9](spec.md#9-gbrain-case)). Demo goal, not required: it also fixes the bug and shows before/after with `motion compare`. |
+| 6 | 160–225 | Rehearse, fix failures, freeze | A second real run from reset; one fresh turn retrieves the case; a labelled recording of a real run exists; PROGRESS.md updated. See [demo.md](demo.md). |
+
+Only milestones 1, 5 and 6 use real QM turns. Everything else is checked by
+running our commands directly, which is fast and free.
 
 If setup eats build time, subtract it at once and cut from the list below.
 Keep the final 30 minutes for rehearsal and freeze. Never report an
@@ -54,7 +89,7 @@ environment failure as a finished milestone.
   call also passed. Only QM's tool wrapper (read as pass-through) and our new
   code remain, and test 2 covers both. If it fails, the fault is in our patch
   or the wrapper.
-- **A single missed frame (milestones 3 and 5).** The rebound is on screen for
+- **A single missed frame (milestones 2 and 5).** The rebound is on screen for
   exactly one frame, and a skipped screencast frame can hide it. Mitigations:
   several takes, every frame in the window, and reporting takes where the
   defect did not appear.
