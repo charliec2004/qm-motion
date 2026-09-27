@@ -45,6 +45,23 @@ machine. The motion product is intentionally not implemented by this kickoff.
   after-takes, compared, attached 2 sheets, and wrote a searchable GBrain case.
   Host re-check: before takes reopen at +276.4/+261.3/+277.6 ms, after takes
   none. The reply itself cites no ms; the case does. `artifacts/motion/m5-*`.
+- **M6 passed, 2:13 PM.** Reset now archives earlier runs to
+  `/root/qm-motion-demo-archive/`; each run's agent evidence was archived to
+  `/root/motion-archive/` and host tars before the next reset.
+  - Second investigation, typed in the web UI after a source reset (run
+    `85907518…`): reopen in 3/3 before-takes, none after; it rejected its first
+    `forwards` fix after a reopen test, committed an `onAnimationEnd` fix.
+  - Fresh-thread recall (run `44f81440…`, 10 s): `gbrain search` then `get`
+    returned that case's slug, token, diagnosis and result.
+  - Labelled recording of a third, complete real investigation typed in the web
+    UI (run `3de967d9…`, 4 min 16 s real time, 3 sheets inline):
+    `artifacts/demo-recording/20260927T210759/investigation-labelled.mp4`.
+    Reopen in 3/3 before-takes, 0/9 after; case written with a lowercase slug.
+  - The first recording attempt was cut off when the session ended; launch
+    `scripts/record-investigation.mjs` with `setsid nohup … &` so it survives.
+  - Demo state now: fixed copy `4907577` served by QM background job
+    `8c202320…` (thread in `artifacts/motion/m6-handoff3-thread.txt`). Before
+    presenting live, stop it there and run `npm run demo -- reset`.
 
 ## Working foundation
 
@@ -147,9 +164,9 @@ Pre-build investigation, September 27, 9:20–10:55 AM PT:
 Details: [image delivery](docs/architecture.md#image-delivery-verified-by-reading-the-code),
 [sandbox rebuilds](docs/architecture.md#sandbox-image-changes), and the exact
 contracts in [spec.md](docs/spec.md).
-The first coding task is `motion-evidence-image.patch` plus a real withheld-code
-turn; then follow [plan.md](docs/plan.md). There is no completed before/after
-repair or measured full 90-second product demo yet.
+All six plan milestones have passed. The build log above records three real
+investigations with before/after repairs; a full loop takes 1.5–4 minutes, so
+the demo uses the labelled recording.
 
 Start with `npm start` and [administrator sign-in](docs/setup.md#sign-in-from-your-mac);
 `npm run login` is for the Linux desktop. Use `npm run demo` for the target.
