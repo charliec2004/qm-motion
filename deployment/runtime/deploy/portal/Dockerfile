@@ -1,0 +1,1 @@
+FROM ghcr.io/yc-software/qm/portal@sha256:e7a6eb83acb828c3dbd68b2514986218f2946dbd3bf1d563f768eb26e1d8457a

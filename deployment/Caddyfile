@@ -1,0 +1,12 @@
+{
+  auto_https off
+  admin off
+}
+https://localhost:8443 {
+  tls /certs/localhost.crt /certs/localhost.key
+  reverse_proxy host.docker.internal:8081
+}
+https://gbrain.qm.internal:3443 {
+  tls /certs/localhost.crt /certs/localhost.key
+  reverse_proxy gbrain:3131
+}

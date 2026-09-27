@@ -1,0 +1,13 @@
+{
+  "name": "qm-motion-radix-1074",
+  "version": "1.0.0",
+  "private": true,
+  "license": "MIT",
+  "scripts": { "start": "node server.mjs" },
+  "dependencies": {
+    "@radix-ui/react-accordion": "0.1.5",
+    "react": "18.0.0-rc.0",
+    "react-dom": "18.0.0-rc.0"
+  },
+  "devDependencies": { "esbuild": "0.25.12" }
+}

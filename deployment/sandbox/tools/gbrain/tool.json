@@ -1,0 +1,22 @@
+{
+  "id": "gbrain",
+  "label": "QM Motion memory",
+  "advertise": "gbrain",
+  "hints": [
+    "Project memory: gbrain whoami, gbrain search QUERY, gbrain get SLUG, gbrain put cases/SLUG --content MARKDOWN.",
+    "Use motion-workflow for evidence-backed cases. Memory failure must not block capture or inspection."
+  ],
+  "auth": {
+    "check": "gbrain whoami",
+    "credentialPaths": [
+      {
+        "path": ".gbrain/config.json",
+        "kind": "file"
+      }
+    ],
+    "reauth": "echo \"Ask the host operator to run python3 scripts/connect-gbrain.py in the QM Motion repository.\" >&2; exit 1"
+  },
+  "install": {
+    "binary": "gbrain"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "name": "qm-motion",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=24" },
+  "scripts": {
+    "bootstrap": "bash scripts/bootstrap.sh",
+    "start": "bash scripts/start.sh",
+    "stop": "bash scripts/stop.sh",
+    "status": "bash scripts/status.sh",
+    "login": "node scripts/login.mjs",
+    "smoke": "bash scripts/smoke.sh",
+    "smoke:ui": "node scripts/ui-smoke.mjs",
+    "computer": "python3 scripts/computer.py",
+    "demo": "bash scripts/demo.sh"
+  },
+  "dependencies": {
+    "agent-browser": "0.38.1",
+    "playwright": "1.63.0"
+  }
+}

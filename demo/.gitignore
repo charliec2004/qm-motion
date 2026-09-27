@@ -1,0 +1,8 @@
+/node_modules/
+/evidence/
+/server.log
+/server.pid
+/public/bundle.js
+/public/bundle.css
+/public/bundle.js.map
+/public/bundle.css.map

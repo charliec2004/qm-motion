@@ -1,0 +1,19 @@
+{
+  "id": "gpt-6-sol",
+  "name": "GPT-6 Sol",
+  "provider": "openai",
+  "template": "gpt-5.5",
+  "contextWindow": 1050000,
+  "maxTokens": 128000,
+  "cost": {
+    "input": 2,
+    "output": 10,
+    "cacheRead": 0.2,
+    "cacheWrite": 2.5,
+    "tiers": [{ "inputTokensAbove": 272000, "input": 4, "output": 15, "cacheRead": 0.4, "cacheWrite": 5 }]
+  },
+  "fastMode": false,
+  "base": true,
+  "webui": true,
+  "auxiliary": false
+}

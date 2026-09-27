@@ -1,0 +1,14 @@
+**
+!package.json
+!package-lock.json
+!.state
+!.state/build
+!.state/build/agent.mjs
+!.state/bin
+!.state/bin/gbrain
+!.state/tls
+!.state/tls/localhost.crt
+!deployment
+!deployment/sandbox
+!deployment/sandbox/Dockerfile
+!deployment/gbrain.Dockerfile

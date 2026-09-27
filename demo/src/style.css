@@ -1,0 +1,21 @@
+:root { font-family: system-ui, sans-serif; color: #23382e; background: #f6f3eb; }
+* { box-sizing: border-box; }
+body { margin: 0; }
+main { width: min(680px, calc(100% - 64px)); margin: 64px auto; }
+.eyebrow { font-size: 12px; letter-spacing: .2em; font-weight: 700; color: #68776c; }
+h1 { font-size: 48px; line-height: 1.12; letter-spacing: -.045em; margin: 25px 0 20px; }
+.intro { font-size: 18px; color: #69766e; margin-bottom: 40px; }
+.faq { border-top: 1px solid #cbd1c4; }
+.item { border-bottom: 1px solid #cbd1c4; }
+.header { margin: 0; }
+.trigger { display: flex; justify-content: space-between; align-items: center; width: 100%; padding: 22px 0; border: 0; background: transparent; color: inherit; text-align: left; font: inherit; font-size: 17px; font-weight: 600; cursor: pointer; gap: 20px; }
+.trigger:focus-visible { outline: 2px solid #597762; outline-offset: 5px; }
+.symbol { font-size: 24px; font-weight: 400; transition: transform 250ms; }
+.trigger[data-state="open"] .symbol { transform: rotate(45deg); }
+.content { overflow: hidden; }
+.content[data-state="open"] { animation: expand 250ms ease-out; }
+.content[data-state="closed"] { animation: collapse 250ms ease-out; }
+.answer { padding: 0 48px 24px 0; line-height: 1.65; color: #58685e; }
+.footer { margin-top: 28px; font-size: 13px; color: #7a877e; }
+@keyframes expand { from { height: 0; } to { height: var(--radix-accordion-content-height); } }
+@keyframes collapse { from { height: var(--radix-accordion-content-height); } to { height: 0; } }

@@ -1,0 +1,37 @@
+{
+  "contract": 1,
+  "orgId": "qm-motion",
+  "publicUrl": "https://localhost:8443",
+  "target": "docker",
+  "basePort": 8080,
+  "botName": "QM Motion",
+  "orgName": "QM Motion",
+  "services": [
+    "core",
+    "web-ui",
+    "admin",
+    "portal",
+    "auth"
+  ],
+  "plugins": [],
+  "skills": [],
+  "sandbox": {
+    "backend": "local",
+    "image": "qm-motion-sandbox:0.1.12"
+  },
+  "env": {
+    "core": {
+      "HARNESS": "pi"
+    },
+    "auth": {
+      "AUTH_EMAIL_TRANSPORT": "resend"
+    }
+  },
+  "secretEnv": {
+    "core": {
+      "ADMIN_GRANTS": "ADMIN_GRANTS"
+    }
+  },
+  "modelProvider": "openai",
+  "model": "gpt-6-sol"
+}

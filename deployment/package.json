@@ -1,0 +1,19 @@
+{
+  "name": "qm-motion-qm-deployment",
+  "version": "0.0.0",
+  "dependencies": {
+    "@yc-software/qm": "0.1.12"
+  },
+  "private": true,
+  "engines": {
+    "node": ">=24.0.0"
+  },
+  "scripts": {
+    "qm": "qm",
+    "check": "qm check",
+    "plan": "qm plan",
+    "deploy": "qm up",
+    "status": "qm status",
+    "conformance": "qm conformance --static"
+  }
+}

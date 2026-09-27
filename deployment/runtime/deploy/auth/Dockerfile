@@ -1,0 +1,1 @@
+FROM ghcr.io/yc-software/qm/auth@sha256:6a7f59003e36488d5f3e1dfb066272edaf56d5981e53583d74346ffa51522b3f

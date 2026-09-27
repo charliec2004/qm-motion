@@ -1,0 +1,48 @@
+name: qm-motion-support
+services:
+  brain-db:
+    image: pgvector/pgvector:pg16@sha256:ccc6e83d6e35e931dc7c5def2022729d5a6c370318d099181995567ff1fb4d6b
+    environment:
+      POSTGRES_DB: gbrain
+      POSTGRES_USER: gbrain
+      POSTGRES_PASSWORD: ${GBRAIN_DB_PASSWORD:?Run npm run bootstrap}
+    volumes:
+      - brain-db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gbrain -d gbrain"]
+      interval: 2s
+      timeout: 5s
+      retries: 30
+    networks: [brain-db]
+  gbrain:
+    image: qm-motion-gbrain:0.59.0.0
+    build:
+      context: ..
+      dockerfile: deployment/gbrain.Dockerfile
+    environment:
+      GBRAIN_DATABASE_URL: postgres://gbrain:${GBRAIN_DB_PASSWORD}@brain-db:5432/gbrain
+      GBRAIN_HTTP_CORS_ORIGIN: https://gbrain.qm.internal:3443
+    volumes:
+      - brain-config:/data
+    depends_on:
+      brain-db:
+        condition: service_healthy
+    networks: [brain-db, brain-clients]
+  tls:
+    image: caddy:2.10.2@sha256:c3d7ee5d2b11f9dc54f947f68a734c84e9c9666c92c88a7f30b9cba5da182adb
+    ports: ["127.0.0.1:8443:8443", "127.0.0.1:3443:3443"]
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ../.state/tls:/certs:ro
+    extra_hosts: ["host.docker.internal:host-gateway"]
+    networks:
+      brain-clients:
+        aliases: [gbrain.qm.internal]
+volumes:
+  brain-db:
+  brain-config:
+networks:
+  brain-db:
+    internal: true
+  brain-clients:
+    name: qm-motion-brain-clients

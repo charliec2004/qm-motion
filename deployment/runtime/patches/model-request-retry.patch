@@ -1,0 +1,16 @@
+diff --git a/src/harness/pi-harness.ts b/src/harness/pi-harness.ts
+--- a/src/harness/pi-harness.ts
++++ b/src/harness/pi-harness.ts
+@@ -1092,7 +1092,11 @@
+     ephemeralCwd = cwd;
+   }
+   const agentDir = mkdtempSync(join(tmpdir(), `${prefix}-agent-`));
+-  const settingsManager = SettingsManager.inMemory({}, { projectTrusted: false });
++  // Bound the wait for response headers; retry the provider request, not its tools.
++  const settingsManager = SettingsManager.inMemory(
++    { retry: { provider: { timeoutMs: 60_000, maxRetries: 1 } } },
++    { projectTrusted: false },
++  );
+   const resourceLoader = new DefaultResourceLoader({
+     cwd,
+     agentDir,
