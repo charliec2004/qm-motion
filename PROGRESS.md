@@ -101,6 +101,15 @@ machine. The motion product is intentionally not implemented by this kickoff.
   `.html` player playing inline in QM chat (WebM, readyState 4). The skill
   says to attach `video.attach`, label Before and After, say where to look,
   and not attach sheets.
+  - Final real UI turn after deploying layer v9 (run `06735b3b…`): the agent
+    ran compare on scratch takes and attached exactly `before.html` and
+    `after.html`; both played inline (960×720 WebM, readyState 4). Its reply
+    labelled Before and After with the reopen times and reported the
+    same-revision caveat. Its GBrain write hit a revision conflict because an
+    earlier test turn had used the same slug; it reported that plainly.
+  - Scratch takes and the scratch app were deleted. GBrain still holds that
+    test case (`cases/motion-20260927t224445-probevb-1-e5b4`, it describes the
+    rebound): back it up and soft-delete it before a clean demo run.
 
 ## Working foundation
 
