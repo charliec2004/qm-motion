@@ -96,7 +96,13 @@ for d in /root/.agent-proc/*/; do
   kill "$pid" 2>/dev/null || true
 done
 for pid in $(pgrep -f '[n]ode_modules/.bin/vite' || true); do kill "$pid" 2>/dev/null || true; done
-sleep 1
+# Wait (up to 5 s) for those jobs to exit so their logs are archived below.
+for attempt in {1..10}; do
+  alive=0
+  for d in /root/.agent-proc/*/; do pid=$(cat "$d/pid" 2>/dev/null || true); [[ "$pid" =~ ^[0-9]+$ ]] && kill -0 "$pid" 2>/dev/null && alive=1; done
+  [[ $alive == 0 ]] && break
+  sleep 0.5
+done
 keep='.agent-turn apis.json artifacts browser-smoke.mjs conversations.json convos deployments.json files.json loops.json motion projects.json qm-computer-proof.txt qm-ui-proof.txt skills'
 for p in /root/workspace/* /root/workspace/.[!.]*; do
   [[ -e "$p" ]] || continue
@@ -104,6 +110,11 @@ for p in /root/workspace/* /root/workspace/.[!.]*; do
 done
 for p in /root/workspace/artifacts/motion/*; do [[ -e "$p" && "$(basename "$p")" != selftest ]] && echo "${p#/}"; done
 for p in /root/*-archive /root/.npm/_logs; do [[ -e "$p" ]] && echo "${p#/}"; done
+# agent-browser session files the agent created (the environment smoke's own session stays).
+for p in /root/.agent-browser/*; do
+  [[ -e "$p" ]] || continue
+  case "$(basename "$p")" in qm-environment-smoke.*) ;; *) echo "${p#/}" ;; esac
+done
 for d in /root/.agent-proc/*/; do
   [[ -d "$d" ]] || continue
   pid=$(cat "$d/pid" 2>/dev/null || true)
