@@ -137,7 +137,8 @@ unless the agent owns a `background` job, which kills a server started with
     defective panel. In real use the agent writes its own scenario
     (`cli.mjs help scenario`) anywhere under `/root/workspace`.
 - **Copy into the computer:**
-  `tar -C src -c motion | python3 scripts/computer.py tar -x -C /root/workspace`.
+  `tar -C src -c --exclude=scenarios motion | python3 scripts/computer.py tar -x -C /root/workspace`.
+  The fixture goes to `/tmp/motion-fixture/` in the computer, outside the agent's workspace.
 - **Run:** `node /root/workspace/motion/cli.mjs <command> …`. The guidance
   skill calls it `motion` for short.
 - **Playwright:** reuse the spike's proven code

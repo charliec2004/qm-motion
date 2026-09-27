@@ -1,0 +1,16 @@
+{
+  "name": "field-notes-close",
+  "url": "http://localhost:4173/",
+  "appDir": "/root/workspace/qm-motion-demo/current",
+  "viewport": { "width": 960, "height": 720 },
+  "deviceScaleFactor": 1,
+  "reducedMotion": "no-preference",
+  "ready": { "selector": ".faq .item:nth-child(1) .content[data-state='open']", "settleMs": 350 },
+  "trigger": { "action": "click", "role": "button", "name": "What comes with a Field Notes membership?", "exact": true },
+  "watch": [
+    { "name": "first-answer", "selector": ".faq .item:nth-child(1) .content", "attributes": ["data-state"] },
+    { "name": "second-question", "selector": ".faq .item:nth-child(2) .header" }
+  ],
+  "recordBeforeMs": 300,
+  "recordAfterMs": 800
+}

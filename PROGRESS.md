@@ -25,6 +25,10 @@ machine. The motion product is intentionally not implemented by this kickoff.
   `motion_view` once and replied with the withheld code exactly; its text
   result held only path, size and SHA-256. `artifacts/motion/m1-result.json`,
   `artifacts/smoke/run-eea0d7e6-f6b1-4a77-b878-3a834d3b011c.json`.
+- **M2 passed, 1:56 PM.** `motion capture --takes 3` (src/motion, copied to
+  `/root/workspace/motion`) wrote frames, `frames.json`, `trace.json` and a
+  manifest per take; all 3 traces show the one-sample reopen (0.59/0.00 →
+  76.78 → hidden at +259.8, +278.2, +277.9 ms). `artifacts/motion/m2-*.json|txt`.
 
 ## Working foundation
 
