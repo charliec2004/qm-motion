@@ -62,6 +62,27 @@ machine. The motion product is intentionally not implemented by this kickoff.
   - Demo state now: fixed copy `4907577` served by QM background job
     `8c202320…` (thread in `artifacts/motion/m6-handoff3-thread.txt`). Before
     presenting live, stop it there and run `npm run demo -- reset`.
+- **Trailhead mock demo passed, 3:00 PM.** New demo shape, typed in the web UI:
+  the agent *builds* an FAQ on pinned `@radix-ui/react-accordion@0.1.5` +
+  React `18.0.0-rc.0`, a code review passes it, then a motion check finds and
+  fixes the rebound. Prompts are in [demo.md](docs/demo.md#agent-built-target-trailhead).
+  - First build used `ReactDOM.render`: 0/3 host probe takes rebound. A copy
+    switched to `createRoot` (from `react-dom`; rc.0 has no `react-dom/client`)
+    rebounded 3/3, so the build prompt now asks for `createRoot`.
+  - Rerun: agent wrote `createRoot` and keyframes without `forwards`; host
+    probe rebounded 3/3 (0 → 132 px → hidden, ~+310 ms), probes then deleted.
+    The review ("no motion recordings") passed the animation.
+  - Motion turn (~4 min): reopen in 3/3 before-takes; its first `forwards` fix
+    snapped 132 → 0 px at +60 ms and was rejected from the trace; a grid-wrapper
+    fix closed cleanly in 3/3 after-takes. Host check: opening still animates
+    0 → 105.75 px over ~350 ms. Case `cases/motion-20260927t215655-before-1-8c49`
+    written. Compare warned the app had no Git revision.
+  - Evidence: `artifacts/trailhead-mock/trailhead-mock.tgz` (app without
+    `node_modules`, takes, compares).
+  - Clean slate before the run: prior Field Notes material moved from
+    `/root/workspace` to `/root/m5-archive/` (including `qm-motion-demo`, so
+    `npm run demo` needs it moved back); GBrain pages backed up to
+    `artifacts/gbrain-backup/` and soft-deleted (restorable until Sep 28 ~2:45 PM).
 
 ## Working foundation
 
