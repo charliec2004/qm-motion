@@ -29,6 +29,10 @@ machine. The motion product is intentionally not implemented by this kickoff.
   `/root/workspace/motion`) wrote frames, `frames.json`, `trace.json` and a
   manifest per take; all 3 traces show the one-sample reopen (0.59/0.00 →
   76.78 → hidden at +259.8, +278.2, +277.9 ms). `artifacts/motion/m2-*.json|txt`.
+- **M3 passed, 2:00 PM.** `motion inspect` printed the change table (reopen
+  row `+259.8 … 76.78`) and one 18-frame sheet in 1.8 s; a tall crop split into
+  3 sheets automatically. Sheet frame #17 (+268.2 ms) shows the reopened
+  answer. `artifacts/motion/m3-inspect-*.json`, `artifacts/motion/m3/`.
 
 ## Working foundation
 
