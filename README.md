@@ -5,6 +5,9 @@ interaction, fix the application, and verify the result over time. GBrain keeps
 concise evidence-backed cases. The kickoff environment works; the motion
 extension is the next implementation task.
 
+**New here?** Read [the product in plain words](docs/brief.md#in-plain-words)
+first.
+
 ## Run on Linux; access over Tailscale
 
 Verified on Linux x86_64 with Docker + Compose, Node 25 (24+ required), npm,
