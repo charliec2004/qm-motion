@@ -91,16 +91,18 @@ machine. The motion product is intentionally not implemented by this kickoff.
   workspace rebounded 3/3 (probe deleted). Not yet run with the agent. GBrain
   still holds the rehearsal case; soft-delete it before a clean run. Prompts:
   [demo.md](docs/demo.md#agent-built-target-trailhead).
-- **`motion video` for people, 3:30 PM (not yet deployed or run by the agent).**
-  Builds a 60 fps H.264 MP4 from takes' captured frames: real speed over the
-  record window, then slow motion over `--from/--to`, before/after side by
-  side, a cursor and click ripple drawn from the trigger position that capture
-  now records (`manifest.trigger.x/y/key`). Every captured frame is shown for
-  at least one video frame. Also writes `player.html` (MP4 as a data URI) for
-  inline chat playback; that iframe playback is inferred, not tested. The skill
-  now attaches the player and MP4 instead of sheets. Host check on a scratch
-  storefront copy: the one-frame reopen shows for exactly 1 video frame at real
-  speed and 4 in 1/4× slow motion; render took ~10 s. Probes deleted.
+- **User video from `motion compare`, 3:55 PM.** Compare now also renders a
+  before/after video for the user (first before + first after take): real
+  speed, then 1/4× over its window, cropped by `--crop`, cursor and click
+  ripple from the trigger position capture now records. MP4 + WebM +
+  `player.html`. The separate `video` command was removed. Scratch storefront
+  check: the one-frame reopen shows for 1 video frame at real speed and 4 in
+  slow motion; the fixed take closes cleanly. **Real UI turn** (run
+  `aa02c4c9…`): the agent attached `player.html` and QM played it inline
+  (sandboxed iframe, WebM, readyState 4, playing;
+  `artifacts/video-dev/inline-test.png`). Skill now tells the agent to attach
+  the final compare's `video.attach`, say where to look in text, and not
+  attach sheets. Probes deleted.
 
 ## Working foundation
 

@@ -6,6 +6,7 @@ import { MOTION_DIR, UsageError, WORKSPACE, crop as parseCrop, fmtMs, loadTake, 
 import { buildTable } from './table.mjs';
 import { cropBox, frameSize, renderSheets, tileSize } from './sheets.mjs';
 import { FRAME_LAG_MS, framesIn, requireTrigger, takeWindow } from './inspect.mjs';
+import { renderVideo } from './video.mjs';
 
 const COLS = 8;
 const MUST_MATCH = [
@@ -80,7 +81,14 @@ export async function compare({ flags }) {
   }
   const rows = takes.map((t, k) => ({ label: t.label, takeId: t.takeId, frames: perTake[k].length,
     table: buildTable(t.manifest.scenario.watch, t.trace, from, to).rows }));
-  const result = { ok: true, sheets, warnings, framesWindow: [from, to + FRAME_LAG_MS], rows,
+  // For the user only: the first before and first after take as a video. Never part of the evidence.
+  let video = null;
+  try {
+    const v = await renderVideo({ before: takes[0], after: takes[before.length], from, to, crop: parseCrop(flags), outDir });
+    video = { attach: [`${MOTION_DIR}/${outId}/player.html`, `${MOTION_DIR}/${outId}/before-after.mp4`], ...v,
+      note: 'For the user, not for you: you cannot see it. Attach both files; player.html plays inline in chat.' };
+  } catch (e) { warnings.push(`user video not made: ${e.message.split('\n')[0]}`); }
+  const result = { ok: true, sheets, warnings, framesWindow: [from, to + FRAME_LAG_MS], rows, video,
     next: sheets.length ? 'call motion_view with each sheet path' : 'no frames in this window; widen --from/--to' };
   writeFileSync(join(outDir, 'compare.json'), JSON.stringify({ inputs: { before, after, from, to, crop: flags.crop ?? null }, ...result }, null, 2));
   return result;

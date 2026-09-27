@@ -1,6 +1,6 @@
 ---
 name: motion-workflow
-description: Investigate and fix things that go wrong on screen over time in a local web app (blink, jump, flicker, flash, glitch, layout shift, animation, transition) by recording the interaction frame by frame, reading per-frame measurements, viewing frame sheets, and comparing before/after takes.
+description: Investigate and fix things that go wrong on screen over time in a local web app (blink, jump, flicker, flash, glitch, layout shift, animation, transition) by recording the interaction frame by frame, reading per-frame measurements, viewing frame sheets, and comparing before/after takes, then showing the user a before/after video.
 ---
 
 Use the `motion` CLI in this computer. It is `node /root/workspace/motion/cli.mjs`;
@@ -12,8 +12,9 @@ option. Every command prints one JSON object with a `next` hint.
 1. **Write a scenario** for the interaction: a JSON file anywhere under
    `/root/workspace` (format: `node /root/workspace/motion/cli.mjs help scenario`).
    `watch` names *where to look* (the elements that move, appear or disappear);
-   their size, position and visibility are traced every display frame. The app
-   server must already be running (start it with the `background` tool).
+   their size, position and visibility are traced every display frame. Set
+   `appDir` to the app's Git working copy so each take records its revision.
+   The app server must already be running (start it with the `background` tool).
 2. **Capture** fresh takes (a new browser each time; 3 by default):
    `node /root/workspace/motion/cli.mjs capture --scenario /root/workspace/<your-scenario>.json --label before`
 3. **Inspect** one take:
@@ -31,7 +32,10 @@ option. Every command prints one JSON object with a `next` hint.
    scenario (`--label after`) and compare:
    `node /root/workspace/motion/cli.mjs compare --before <id,id,id> --after <id,id,id> --from <ms> --to <ms>`.
    View every compare sheet with `motion_view`. Compare reports change, not
-   quality: you judge whether the requested behavior is now right.
+   quality: you judge whether the requested behavior is now right. Compare
+   also makes the user's video from the first before and first after take:
+   real speed, then slow motion over `--from`/`--to`, cropped by `--crop`
+   (crop to the region that matters so it is readable).
 
 ## Evidence rules
 
@@ -43,16 +47,15 @@ option. Every command prints one JSON object with a `next` hint.
   compare warnings. Frame rate is not proof of smoothness.
 - Cite the take ID, table row times and the sheet frames (`#N`) you viewed.
 
-## Show the user a video, not sheets
+## Reply to the user
 
-Sheets and tables are your evidence; the user watches a video. After compare,
-pick one representative before take and one after take and run
-`node /root/workspace/motion/cli.mjs video --before <id> --after <id> --from <ms> --to <ms>`
-with the window around the moment that matters (it plays at real speed, then
-in slow motion over that window, with the cursor drawn). Attach the printed
-`player` (plays inline in chat) and `video` (MP4 download) with `attach`. Do
-not attach sheets unless the user asks for them. You cannot see the video;
-describe only what the table and the sheets you viewed show.
+Tables and sheets are your evidence; the user gets the video. Attach the two
+`video.attach` files from your final compare (the one whose after takes hold
+the change you kept): `player.html` plays inline in chat, the MP4 downloads.
+The video has no annotations, so say in your reply where to look (for example
+"in BEFORE, watch the menu at about +120 ms"). You cannot see
+the video: describe only what the table and the sheets you viewed show. Do not
+attach sheets unless the user asks for them.
 
 ## Case record (last step)
 

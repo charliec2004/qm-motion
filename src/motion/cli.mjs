@@ -12,12 +12,8 @@ const HELP = `usage: ${CLI} <command> [options]
       moment). Times are ms from the trigger; negatives allowed.
   compare --before <id,id,id> --after <id,id,id> [--from <ms>] [--to <ms>] [--crop x,y,w,h]
       One table per take + sheets with one row per take (split into
-      time slices automatically).
-  video <take-id> | --before <take-id> --after <take-id> [--from <ms>] [--to <ms>] [--slow 4]
-      MP4 for the user, built from the captured frames: real speed, then slow
-      motion over --from/--to, with the cursor and a click marker, plus
-      player.html that plays inline in chat. Attach both to your reply.
-      For people only; analyse with inspect/compare.
+      time slices automatically). Also makes a before/after video for the
+      user (video.attach): you cannot see it; attach it, never cite it.
   help scenario   annotated scenario format, to write one for any app
 View any printed sheets[].path with the motion_view tool.
 `;
@@ -26,7 +22,6 @@ const COMMANDS = {
   capture: () => import('./capture.mjs').then(m => m.capture),
   inspect: () => import('./inspect.mjs').then(m => m.inspect),
   compare: () => import('./compare.mjs').then(m => m.compare),
-  video: () => import('./video.mjs').then(m => m.video),
 };
 
 const [command, ...rest] = process.argv.slice(2);
