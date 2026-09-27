@@ -34,9 +34,6 @@ Deferred from the September 27 motion-tool research (not in the MVP):
   the fake clock.
 - **Native video input** for models that support it (for example Gemini), for
   a whole-motion "does this feel right" check.
-- **Setup steps in scenarios:** actions run before the trigger (for example
-  open a menu, then capture its close). The MVP scenario starts from the
-  page's load state plus an optional `ready` selector.
 - **A live view for the user:** forward the computer's dev-server port, or
   stream the agent's browser, so the user can watch or click the app
   themselves. Today they see only attached images.

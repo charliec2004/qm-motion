@@ -9,7 +9,8 @@ Choices marked **Decision** were made on September 27 to remove ambiguity.
 Change them here first if needed.
 
 **Text first, image to confirm.** Every look at a take gives the agent a short
-numeric table of the watched elements (from the trace) and one sheet. The
+numeric table of the watched elements (from the trace) and its sheets
+(split automatically; view the one covering your moment). The
 table is cheap and exact; the sheet shows what the numbers cannot, such as
 clipping or overlap. In the spike, a per-frame trace of the panel's height
 exposed the rebound in every logged run.
@@ -95,10 +96,11 @@ shows the demo server stopped, run `npm run demo` again.
 
 A **real turn** is an actual QM conversation turn with GPT-6 Sol, sent with
 `node scripts/qm-turn.mjs` (or typed in the web UI for the demo). The script
-calls QM's `/api/turn` with `gpt-6-sol`, `pi` and `thinkingLevel: "low"` (as
-`scripts/smoke-agent.mjs` does), and saves QM's run record to
+calls QM's `/api/turn` with `gpt-6-sol` and `pi`, and saves QM's run record to
 `artifacts/smoke/run-<id>.json` on the host. Add two flags to `qm-turn.mjs`:
 
+- Always pass `{ threadRef, thinkingLevel: "low" }` to `turn()`, as
+  `scripts/smoke-agent.mjs` does; today `qm-turn.mjs` passes no options.
 - `--thread <name>`: sets `threadRef` to
   `web:charlieconner04@gmail.com:<name>`. Verified in code on September 27:
   the web server forwards a `threadRef` starting with `web:`, and core
@@ -178,10 +180,12 @@ unless the agent owns a `background` job, which kills a server started with
     capture --scenario <file.json> [--label before] [--takes 3] [--before-ms 300] [--after-ms 800]
         Fresh takes of one interaction; prints takeIds.
     inspect <take-id> [--from <ms>] [--to <ms>] [--crop x,y,w,h]
-        Table of watched-element changes (read first) + one sheet of every
-        frame in the window. Times are ms from the trigger; negatives allowed.
+        Table of watched-element changes (read first) + sheets holding every
+        frame in the window (split automatically; view the one covering your
+        moment). Times are ms from the trigger; negatives allowed.
     compare --before <id,id,id> --after <id,id,id> [--from <ms>] [--to <ms>] [--crop x,y,w,h]
-        One table per take + one sheet, one row per take.
+        One table per take + sheets with one row per take (split into
+        time slices automatically).
     help scenario   annotated scenario format, to write one for any app
   View any printed sheets[].path with the motion_view tool.
   ```
@@ -225,6 +229,7 @@ with an error naming the field.
 | `appDir` | no | Git working copy used to record the app revision; default `null`. |
 | `viewport`, `deviceScaleFactor`, `reducedMotion` | no | Defaults `960×720`, `1`, `"no-preference"`. |
 | `ready` | no | `selector` (CSS) that must be visible before the take, plus `settleMs` (default 350). Without it: page load plus `settleMs`. |
+| `setup` | no | Actions to run in order after `ready` and before recording, each shaped like `trigger` plus an optional `settleMs` (default 350) to wait afterwards. Use it to reach the starting state, for example `[{ "action": "click", "role": "button", "name": "Menu" }]` before a trigger that presses `Escape`. Setup is not recorded or timed. |
 | `watch` | no | 0–10 elements, each `{name, selector, attributes?, styles?}`. The first element matching `selector` is traced. `attributes` adds DOM attributes; `styles` adds computed styles (for example `"transform"`, `"clip-path"`). It names *where to look*, not what is wrong. With no `watch`, `inspect` returns only the sheet. |
 | `recordBeforeMs`, `recordAfterMs` | no | Defaults 300 and 800, and overridable per command. Total at most 10000. |
 
@@ -258,7 +263,10 @@ agent's edited copy.
 2. Launch `/usr/bin/chromium` through Playwright, apply the viewport, scale
    factor and reduced-motion setting, and navigate.
 3. Wait for `ready` (10 s timeout; the error names the selector and suggests
-   checking it against the page or editing `ready`), then `settleMs`.
+   checking it against the page or editing `ready`), then `settleMs`. Then run
+   each `setup` action with the same locator rules and 5 s timeout as the
+   trigger, waiting its `settleMs` after each. A failing setup step is named
+   in the error (`setup[1] … matched 0 elements`).
 4. Install a capture-phase listener on `document` for the trigger's first
    event:
    - `pointerdown` for click, falling back to `click`;
@@ -438,8 +446,8 @@ section 6.
   - before and after have the same app revision.
 - **Layout (Decision):** one row per take, before rows first. Each row shows
   *every* frame of that take in the window, left to right, and its first tile
-  carries the row label (`before 1`, `after 2`) drawn over it, so no extra
-  tile is needed. Columns are not forced to line up, because takes deliver
+  carries the row label (`before 1`, `after 2`) drawn bottom-left, so no extra
+  tile is needed and it doesn't overlap the time label. Columns are not forced to line up, because takes deliver
   frames at different times and forcing a grid would drop or repeat frames.
 - **Size (Decision):** as in section 6, the only limit is 2000×2000 px and
   4.5 MiB per image.

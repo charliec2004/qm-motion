@@ -62,6 +62,19 @@ The user asks QM's agent about a visual problem. In **one turn**, the agent:
    `attach` tool, and writes a short case to GBrain. A memory failure is
    reported and never blocks steps 1–5.
 
+**Who performs the interaction.** The agent decides everything: which page,
+what to do first (setup, for example opening a menu), the action to record
+(the trigger, for example pressing Escape) and what to watch. It writes this
+as a scenario file. One `motion capture` call then does the rest by itself:
+- fresh browser, load, setup;
+- start recording, perform the trigger;
+- stop recording and save.
+
+The agent does not start, click and stop in separate tool calls. Each call
+takes seconds of model time, a separately issued click lands 49–91 ms after
+it is sent (measured in the spike), and before and after takes must repeat
+exactly the same action.
+
 Images returned by a tool stay visible for the rest of that turn only (see
 [image delivery](#image-delivery-verified-by-reading-the-code)). A later turn
 must view the files again. The files themselves persist in the computer.
