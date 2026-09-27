@@ -14,7 +14,8 @@
     "smoke:ui": "node scripts/ui-smoke.mjs",
     "computer": "python3 scripts/computer.py",
     "demo": "bash scripts/demo.sh",
-    "trailhead": "bash scripts/trailhead.sh"
+    "trailhead": "bash scripts/trailhead.sh",
+    "preview": "bash scripts/preview.sh"
   },
   "dependencies": {
     "agent-browser": "0.38.1",
