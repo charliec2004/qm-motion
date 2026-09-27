@@ -126,6 +126,19 @@ machine. The motion product is intentionally not implemented by this kickoff.
   workspace: page loaded through the proxy, `[vite] connected.`, and a tailnet
   Host header returned 200. Needs the one-time `sudo tailscale serve --bg
   --https=8443 http://127.0.0.1:15173` ([setup.md](docs/setup.md#live-view-of-the-agents-dev-server)).
+- **Clean storefront rehearsal passed, 4:10–4:19 PM.** Primed state (scan clean),
+  the three prompts in [rehearsal.md](docs/rehearsal.md), GPT-6 Sol via the web
+  UI. Build: the agent took `@radix-ui/react-accordion@0.1.5` from
+  CONTRIBUTING.md, wrote a keyframe close without `forwards`, committed
+  `9e54224`; operator probe: rebound 3/3 at ~+277 ms (4.6 → 72 px → hidden).
+  Review: passed the animation ("the closing panel stays mounted until its exit
+  animation finishes"), flagged only the page title. Motion turn (3 min 58 s):
+  reopen in 3/3 before-takes; a first fix snapped 72 → 0 px at ~+193 ms and was
+  replaced by a grid-row fix; final compare (no warnings, revisions recorded)
+  clean 3/3; Before/After `.html` videos inline; commit `c5ad6d9`; GBrain case
+  written. Its reply did not mention the rejected first fix. New
+  `npm run trailhead -- probe` reproduces the operator check: REBOUND 3/3 on
+  `9e54224`, no rebound 3/3 on `c5ad6d9`.
 
 ## Working foundation
 

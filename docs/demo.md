@@ -136,6 +136,8 @@ the implementation boundary; do not portray setup checks as an agent repair.
 
 ## Agent-built target: Trailhead
 
+Step-by-step instructions for other people are in [rehearsal.md](rehearsal.md).
+
 The agent adds an FAQ page to an existing storefront repository, so the
 defect comes from the real library plus the agent's own CSS; nobody inserts
 it. [targets/trailhead](../targets/trailhead) is our original fixture: home

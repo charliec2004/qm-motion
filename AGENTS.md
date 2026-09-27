@@ -13,6 +13,7 @@ This kickoff prepares the environment; the motion extension is still to build.
 - `docs/plan.md`: ordered implementation work and the cut list.
 - `docs/spec.md`: exact contracts: formats, flags, outputs, errors, tests.
 - `docs/demo.md`: target revision, reproduction, and presentation.
+- `docs/rehearsal.md`: step-by-step runbook to reset, run and record the Trailhead demo.
 - `docs/references.md`: pins, licenses, and reused code.
 
 ## Time and scope
