@@ -27,7 +27,9 @@ Optional follow-on work belongs in `docs/roadmap.md`.
 
 ## Commands
 
-Commands run from this repository root; verification status is in PROGRESS.md.
+Commands run from the root of the **primary checkout**, which holds the ignored
+`.state/`, `deployment/.env`, `node_modules` and `artifacts/`. Git worktrees lack
+these and cannot run services. Verification status is in PROGRESS.md.
 - `npm ci`: install pinned project dependencies.
 - `npm run bootstrap`: prepare dependencies, local secrets, and container images.
 - `npm start`: start QM, GBrain, PostgreSQL, and the local TLS front door.
@@ -41,6 +43,31 @@ Commands run from this repository root; verification status is in PROGRESS.md.
 - `cd deployment && npm exec qm -- check`: validate deployment configuration.
 - `cd deployment && npm exec qm -- check --live`: unsupported for Docker in 0.1.12.
 An exit code or filename alone is not proof of a successful agent workflow.
+
+## How the deployment fits together
+
+- **One Linux box runs everything in Docker.** That covers the QM containers
+  (core, portal and web UI, from the pinned `qm` CLI), GBrain with its
+  PostgreSQL, the Caddy TLS front door, and the **agent computer**
+  (`qm-sbx-…`), which is where the agent's commands, the target app and a
+  headless Chromium all run.
+- **Access:** Tailscale Serve proxies `https://charlies-pc.tail1d1ed7.ts.net`
+  to the portal (port 8081) for devices on the tailnet. Sign in by running
+  `qm admin-login` on the Linux box and opening the link on the device
+  ([setup.md](docs/setup.md#sign-in-from-your-mac)).
+- **Deploying a change** means running `npm start`, which is idempotent and
+  runs `qm up --build-from runtime`:
+  - core patches in `deployment/runtime/patches/` are rebuilt into core;
+  - skills in `deployment/sandbox/skills/` are uploaded and applied within
+    30 s.
+  - Sandbox image changes are different: rerun `npm run bootstrap`, then
+    follow [sandbox image changes](docs/architecture.md#sandbox-image-changes).
+  - During development the `motion` CLI is copied into `/root/workspace`
+    ([spec §3](docs/spec.md#3-development-loop-for-the-motion-cli)).
+- **The browser is headless and private to the agent computer.** Nobody can
+  see or click it, and the computer publishes no ports, so its
+  `localhost:4173` is unreachable from the host. Users see evidence as images
+  the agent attaches to its reply.
 
 ## Repository map
 

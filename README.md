@@ -58,6 +58,8 @@ reproduces a historical Radix accordion defect; no repair is prewritten.
 - Shared AGENTS.md / symlinked CLAUDE.md, selected Matt Pocock developer skills,
   and two separately deployed runtime skills.
 
+How it fits together (your Mac → Tailscale → QM on this Linux box → the
+agent's computer) is in [the system in one picture](docs/architecture.md#the-system-in-one-picture).
 Read [PROGRESS.md](PROGRESS.md) for exact evidence and limitations,
 [docs/plan.md](docs/plan.md) for the 225-minute implementation sequence, and
 [docs/demo.md](docs/demo.md) for reproduction and reset. Architecture,

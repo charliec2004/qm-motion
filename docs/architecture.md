@@ -5,6 +5,40 @@ build is **proposed** until [PROGRESS.md](../PROGRESS.md) records it working.
 Terms such as turn, take, trigger and sheet are defined in
 [brief.md](brief.md#terms).
 
+## The system in one picture
+
+```mermaid
+flowchart LR
+    Mac["Your Mac: browser"] -- "HTTPS over Tailscale" --> TS["Tailscale Serve on the Linux box"]
+    subgraph LB["Linux box: Docker containers"]
+      TS --> Portal["QM portal :8081, sign-in"]
+      Portal --> UI["QM web UI: chat"]
+      Portal --> Core["QM core: the agent, pi + GPT-6 Sol"]
+      UI --> Core
+      Core -- "runs commands" --> Computer["Agent computer: app dev server, headless Chromium, motion CLI"]
+      Computer -- "motion_view: sheet image" --> Core
+      Computer -- "gbrain CLI" --> Brain["GBrain + PostgreSQL"]
+    end
+    Core -- "model calls" --> OpenAI["OpenAI API"]
+```
+
+**The life of one message:**
+
+1. You type in QM's web chat on your Mac. The page is served from the Linux
+   box through Tailscale, and the portal checks your sign-in.
+2. Core gives the message to the agent: the pi harness calling GPT-6 Sol on
+   OpenAI's API.
+3. The agent works by calling tools. `execute` runs commands in its own
+   computer, for example `motion capture`, which drives the headless Chromium
+   against the app running there. `motion_view` brings a result image back
+   into the model's view.
+4. The agent replies in the chat. It can attach images, which show inline,
+   and it can save a short case to GBrain.
+
+Everything except OpenAI runs on the Linux box. Your Mac only needs a browser
+and Tailscale. The product works the same way beyond the demo: any app the
+agent can run in its computer can be debugged like this.
+
 ## How it works, top down
 
 The user asks QM's agent about a visual problem. In **one turn**, the agent:
@@ -15,15 +49,15 @@ The user asks QM's agent about a visual problem. In **one turn**, the agent:
    watched elements' size, position and visibility, and a manifest.
 2. **Inspects** a window around the trigger: `motion inspect` prints a short
    **table** from the trace (only frames where something changed) and builds
-   one small sheet containing *every* frame in that window, labelled in ms
-   from the trigger, optionally cropped.
+   sheets containing *every* frame in that window, labelled in ms from the
+   trigger, optionally cropped, and split across as many images as needed.
 3. **Reads, then sees**: the agent reads the table first, then calls the
    `motion_view` tool to see the sheet as pixels and confirm. Without
    `motion_view` the model gets only a file path.
 4. **Diagnoses and edits** the application itself. How to fix is the agent's
    decision; the motion tools only provide evidence.
 5. **Repeats and compares**: new fresh takes, then `motion compare`
-   builds a sheet aligned on the trigger; `motion_view` shows it.
+   builds sheets aligned on the trigger; `motion_view` shows them.
 6. **Reports**: optionally attaches sheets to its reply with QM's existing
    `attach` tool, and writes a short case to GBrain. A memory failure is
    reported and never blocks steps 1–5.
@@ -43,6 +77,30 @@ flowchart LR
     Agent -- gbrain CLI --> Brain[GBrain server + PostgreSQL]
 ```
 
+## How a user uses it
+
+1. **Open QM.** The user opens `https://charlies-pc.tail1d1ed7.ts.net` from a
+   device on the tailnet and chats with the agent in the web UI
+   ([setup.md](setup.md#sign-in-from-your-mac)).
+2. **Give the agent the app.** The app must run inside the agent's computer,
+   because that is where the browser is. Either:
+   - the operator has prepared it, as with the Field Notes demo
+     ([demo.md](demo.md)); or
+   - the user asks the agent to clone a repository, install dependencies and
+     start the dev server with QM's `background` tool. Checked September 27:
+     the computer has `git` and Node 24, and reaches GitHub and the npm
+     registry. Private repositories need credentials, which are out of scope
+     for the MVP.
+3. **Describe the problem**, in words, as a user would ("the page blinks
+   when I close the first FAQ").
+4. **The agent works** as in the loop above. For a new interaction it writes
+   its own scenario file ([spec §4](spec.md#4-scenario-file)).
+5. **The user sees evidence in the reply.** Sheets attached as PNG appear
+   inline in the web chat. The browser itself is headless inside the computer:
+   the user cannot watch or click it, and the computer publishes no ports, so
+   the app is not reachable from the user's device. A live view is on the
+   [roadmap](roadmap.md).
+
 ## What we build
 
 Three pieces. Everything else already exists.
@@ -59,16 +117,20 @@ Three pieces. Everything else already exists.
 | Command | Input | Output |
 | --- | --- | --- |
 | `motion capture` | A saved scenario file (URL, viewport, ready condition, trigger target, elements to watch, recording length) and a label | Take ID; `artifacts/motion/<take-id>/` containing the frames, `frames.json` (Chrome timestamps), `trace.json` (per-frame values of watched elements) and `manifest.json` |
-| `motion inspect` | Take ID, `--from`/`--to` in ms from the trigger, optional `--crop x,y,w,h` | A text table of changed trace values, plus one sheet PNG. Invalid windows fail clearly. |
-| `motion compare` | The take IDs of the before takes and the after takes (three or more each), same window and crop | One table per take plus one sheet with one row per take, aligned on the trigger. Mismatched viewport, browser or URL is rejected. |
+| `motion inspect` | Take ID, `--from`/`--to` in ms from the trigger, optional `--crop x,y,w,h` | A text table of changed trace values, plus sheet PNGs holding every frame in the window. |
+| `motion compare` | The take IDs of the before takes and the after takes (3 by default each), same window and crop | One table per take plus sheets with one row per take, aligned on the trigger. Mismatched URL, viewport or browser is refused. |
 
 The scenario is data, not code: the tool knows nothing about Field Notes or
 its bug. One scenario file for the Field Notes close interaction is enough for
 the MVP.
 
-**Size limits.** `motion_view` rejects images over pi's own read-tool limits:
-2000×2000 px or 4.5 MB (precedent below). `motion inspect` and `compare` aim
-for sheets of about 1 MB or less, and a turn should view only a few.
+**Size is never a failure.** The only real limit is per image: 2000×2000 px
+and 4.5 MiB, which is what pi sends and the model sees clearly. `motion
+inspect` and `compare` split frames across as many sheets as needed, each
+within that limit, with a byte check that re-splits. `motion_view` shrinks
+any oversized image with pi's own `resizeImage` instead of refusing it. See
+[spec §1](spec.md#1-motion_view-qm-core-patch) and
+[§6](spec.md#6-motion-inspect).
 
 ## Ownership and deployment
 

@@ -63,6 +63,13 @@ sudo tailscale serve --bg --https=443 http://127.0.0.1:8081
 tailscale serve status
 ```
 
+**Network caveat (observed September 27).** The QM Docker backend publishes
+core, portal and web UI on all interfaces (`0.0.0.0:8080–8082`, plus IPv6),
+not only through Tailscale. The TLS front door (8443) and GBrain (3443) are
+loopback-only. Whether the host firewall blocks 8080–8082 from the LAN was not
+checked (it needs sudo). On an untrusted network, block those ports or change
+the bind address before relying on "private to the tailnet".
+
 The background route survives closing terminals and restarting Tailscale.
 `npm stop` still stops QM; the retained Serve route then has no running backend.
 To remove only this route, run `sudo tailscale serve --https=443 off`.

@@ -56,10 +56,10 @@ Every doc uses these words in exactly these senses.
 | **Watched element** | An element named in the scenario whose size, position and visibility are traced every frame. |
 | **Trace** | The per-sample record of watched elements during a take (`trace.json`), timed on the page's own clock. `motion inspect` prints it as a short **table** of the samples where something changed. |
 | **`motion capture`** (and `inspect`, `compare`) | Shorthand for `node /root/workspace/motion/cli.mjs capture …` in the computer. There is no `motion` executable. |
-| **Manifest** | The take's record of what was captured and how: app revision, browser version, viewport, trigger time, timing source, file hashes. |
-| **Sheet** | One small PNG grid of frames from a chosen window (and optional crop), labelled in ms from the trigger. The model reads the table first, then views the sheet to confirm. |
+| **Manifest** | The take's record of what was captured and how: app revision, browser version, viewport, trigger time, timing source. |
+| **Sheet** | One PNG grid of frames from a chosen window (and optional crop), labelled in ms from the trigger. A long window gives several sheets. The model reads the table first, then views sheets to confirm. |
 | **Rebound** | The Field Notes defect: while closing, the answer panel pops fully open again for exactly one frame, then disappears (Radix issue #1074). |
-| **`motion_view`** | The QM tool we add. It hands a sheet to the model as an actual image, not a file path. |
+| **`motion_view`** | The QM tool we add. It hands an image (usually a sheet) to the model as actual pixels, not a file path, shrinking it if needed. |
 | **Case** | A short GBrain record of one investigation: request, reproduction, observations, fix, verification, evidence paths. |
 
 ## Acceptance criteria

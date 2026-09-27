@@ -33,31 +33,54 @@ skill, shared-file or memory branches.
 
 **Tool `motion_view`.**
 
-- **Parameters:** `{ path: string }`.
-- **Description** (seen by the model): "Show one QM Motion evidence image
-  (a sheet under artifacts/motion/) to yourself as an image. Use after motion
-  inspect or compare."
-- **Accepts** only PNG paths matching
-  `^artifacts/motion/[A-Za-z0-9._-]+/([A-Za-z0-9._-]+/)*[A-Za-z0-9._-]+\.png$`,
-  with no `..` segment. **Decision:** PNG only, because every sheet we make
-  is PNG. To see a single frame, inspect a one-frame window.
-- **Validates,** in order:
-  1. the path matches;
-  2. the file exists;
-  3. the first 8 bytes are the PNG signature;
-  4. the size is at most 4,718,592 bytes (4.5 MiB, pi's own read-tool
-     limit);
-  5. the IHDR width and height (big-endian, bytes 16–23) are at most
-     2000×2000.
+- **Parameters:** `{ path: string }`, with the parameter description: "Image
+  path under /root/workspace, for example a `sheets[].path` value printed by
+  motion inspect or compare."
+- **Description** (seen by the model):
+
+  > View an image file from your computer (PNG, JPEG, WebP or GIF) as an actual
+  > image you can see; a file path or `read` gives you no pixels. Normally pass
+  > a `sheets[].path` value printed by motion inspect or motion compare, after
+  > reading that command's table. `path` is relative to /root/workspace; an
+  > absolute /root/workspace/… path also works. Large images are shrunk
+  > automatically, and the result says how coordinates map back. The image is
+  > visible only for the rest of this turn; call again in later turns. Never
+  > describe an image you have not viewed with this tool.
+- **Accepts** `.png`, `.jpg`, `.jpeg`, `.webp` or `.gif` files under
+  `/root/workspace`, given relative to it or as an absolute path starting
+  `/root/workspace/` (that prefix is stripped). It rejects any `..` segment and
+  any other absolute path. Evidence normally lives in `artifacts/motion/`, but
+  screenshots the agent takes itself also work.
+- **Never fails on size (smart fallback).** The tool passes the bytes to pi's
+  own `resizeImage` (the public export of `@earendil-works/pi-coding-agent`,
+  which pi's read tool uses). With its defaults it returns an image of at
+  most 2000×2000 px and 4.5 MiB, re-encoding as JPEG if needed.
+  - Tested inside the running core on September 27: a 20 MB, 3000×2400 noise
+    PNG, the worst case, became a 2000×1600 JPEG in about 3.7 s.
+  - When the image was shrunk, `formatDimensionNote(result)` is appended to
+    the text, for example "original 3000x2400, displayed at 2000x1600.
+    Multiply coordinates by 1.50…".
+- **Errors,** each naming the next step:
+  1. `[motion_view error] path must be an image under /root/workspace (got …)`;
+  2. `[motion_view error] not found: <path> (paths are relative to
+     /root/workspace; copy a "sheets[].path" value from motion inspect)`;
+  3. `[motion_view error] file is N MB; the limit for transfer is 50 MB, so
+     crop it first`. This is a real limit: bytes cross from the computer to core
+     as base64 JSON with a 120 s timeout;
+  4. `[motion_view error] could not decode or shrink <path> (not a valid
+     image?)`, when `resizeImage` throws or returns `null`. That is not
+     expected in practice.
 - **Success result:** one text block,
-  `motion_view <path> <w>x<h> <bytes> bytes sha256=<hex>`, followed by one
-  `{type:"image", data:<base64>, mimeType:"image/png"}` block.
-- **Failure result:** a single text block starting `[motion_view error]` that
-  names the failed check, returned through `recordResult` with
-  `isError: true`.
+  `motion_view <path> <w>x<h> <mimeType> sha256=<hex of the file>` (plus the
+  dimension note if shrunk), followed by one
+  `{type:"image", data:<base64 from resizeImage>, mimeType:<its mimeType>}`
+  block.
+- **Failure result:** that single error text block, returned through
+  `recordResult` with `isError: true`.
 - **Logging:** the `recordResult` summary is
-  `{tool:"motion_view", path, bytes, sha256, width, height}` on success and
-  `{tool:"motion_view", path, error}` on failure, never image bytes.
+  `{tool:"motion_view", path, bytes, sha256, width, height, resized}` on
+  success and `{tool:"motion_view", path, error}` on failure, never image
+  bytes.
 - **Registration:** add it to the `tools` list in `createAgentTools`.
   Everything else stays unchanged.
 - **Syntax:** use only erasable TypeScript (Node type stripping).
@@ -107,7 +130,8 @@ unless the agent owns a `background` job, which kills a server started with
 - **Source:** `src/motion/`.
   - `cli.mjs` is the entry point (`capture | inspect | compare`).
   - The command modules sit alongside it.
-  - `scenarios/field-notes-close.json` is the one scenario.
+  - `scenarios/field-notes-close.json` is the demo scenario. The agent can
+    write its own anywhere under `/root/workspace`.
 - **Copy into the computer:**
   `tar -C src -c motion | python3 scripts/computer.py tar -x -C /root/workspace`.
 - **Run:** `node /root/workspace/motion/cli.mjs <command> …`. The guidance
@@ -138,17 +162,41 @@ unless the agent owns a `background` job, which kills a server started with
   computer only because our Dockerfile copies it. Copy the CLI into
   `/root/workspace` instead.
 - **FFmpeg** is on `PATH` in the computer.
-- **Output:** every command prints exactly one JSON object to stdout and
-  exits 0 when `ok` is true. On any failure it prints an object with
-  `"ok":false` and an `"error"` string (plus any partial results) and exits
-  1. Progress goes to stderr.
+- **Arguments:** `--flag value` or `--flag=value`. Parse numbers yourself so
+  negative values work (`--from -100`); Node's `util.parseArgs` rejects that
+  form.
+- **Output:** every command prints exactly one JSON object to stdout,
+  pretty-printed with 2-space indentation so table rows land on separate
+  lines. It exits 0 when `ok` is true. On any failure it prints `"ok":false`,
+  an `"error"` string saying what to do next, and any partial results, then
+  exits 1. Usage errors also include `"usage"`. Every success includes a
+  `"next"` hint with the exact next command. Progress goes to stderr.
+- **Help:** `cli.mjs help` prints plain-text usage (the one non-JSON output):
+
+  ```
+  usage: node /root/workspace/motion/cli.mjs <command> [options]
+    capture --scenario <file.json> [--label before] [--takes 3] [--before-ms 300] [--after-ms 800]
+        Fresh takes of one interaction; prints takeIds.
+    inspect <take-id> [--from <ms>] [--to <ms>] [--crop x,y,w,h]
+        Table of watched-element changes (read first) + one sheet of every
+        frame in the window. Times are ms from the trigger; negatives allowed.
+    compare --before <id,id,id> --after <id,id,id> [--from <ms>] [--to <ms>] [--crop x,y,w,h]
+        One table per take + one sheet, one row per take.
+    help scenario   annotated scenario format, to write one for any app
+  View any printed sheets[].path with the motion_view tool.
+  ```
+
+  `cli.mjs help scenario` prints the section 4 format with one comment per
+  field.
 - **Name:** docs write `motion capture` and so on. The actual command is
   `node /root/workspace/motion/cli.mjs capture …`; there is no `motion`
   executable unless the CLI is later baked into the sandbox image.
 
 ## 4. Scenario file
 
-A scenario is JSON data; the CLI contains no target-specific logic.
+A scenario is JSON data describing one interaction; the CLI contains no
+target-specific logic. The agent can write one for any app. Invalid files fail
+with an error naming the field.
 
 ```json
 {
@@ -169,22 +217,34 @@ A scenario is JSON data; the CLI contains no target-specific logic.
 }
 ```
 
-Locators come from `demo/src/main.jsx`. Every question is a Radix item with
-the classes `.item`, `.header`, `.trigger` and `.content`, and the first
-answer starts open (`defaultValue="question-0"`). `ready` is a CSS selector
-that must be visible. `trigger` uses Playwright's `getByRole`; the `+` symbol
-is `aria-hidden`, so the accessible name is exactly the question text, as the
-spike used. `watch` lists 1–5 elements, each with a name, a CSS selector and
-optional extra `attributes` to record. It names *where to look*, not what is
-wrong. `appDir` provides the app revision.
+| Field | Required | Meaning and default |
+| --- | --- | --- |
+| `name` | yes | Short identifier. |
+| `url` | yes | Page to open inside the computer. |
+| `trigger` | yes | `action`: `click`, `hover` or `press`. Target it with `role` + `name` (+ `exact`), through Playwright's `getByRole`, **or** with `selector` (CSS). `press` also needs `key` (for example `"Escape"`); without a target it presses on the page. |
+| `appDir` | no | Git working copy used to record the app revision; default `null`. |
+| `viewport`, `deviceScaleFactor`, `reducedMotion` | no | Defaults `960×720`, `1`, `"no-preference"`. |
+| `ready` | no | `selector` (CSS) that must be visible before the take, plus `settleMs` (default 350). Without it: page load plus `settleMs`. |
+| `watch` | no | 0–10 elements, each `{name, selector, attributes?, styles?}`. The first element matching `selector` is traced. `attributes` adds DOM attributes; `styles` adds computed styles (for example `"transform"`, `"clip-path"`). It names *where to look*, not what is wrong. With no `watch`, `inspect` returns only the sheet. |
+| `recordBeforeMs`, `recordAfterMs` | no | Defaults 300 and 800, and overridable per command. Total at most 10000. |
+
+Field Notes locators come from `demo/src/main.jsx` and were validated on the
+live page. Every question is a Radix item with the classes `.item`,
+`.header`, `.trigger` and `.content`, and the first answer starts open
+(`defaultValue="question-0"`). The `+` symbol is `aria-hidden`, so the
+accessible name is exactly the question text.
 
 ## 5. `motion capture`
 
-`motion capture --scenario <file> --label <label> [--takes N]`. The label
-matches `[a-z0-9-]{1,16}`; use `before` and `after` for takes you will
-compare. The default is 1 take; compare needs 3 or more per side. Each take is
-about 1.1 s (`recordBeforeMs` + `recordAfterMs`), which covers the 250 ms close
-with margin. Longer is not better here.
+`motion capture --scenario <file> [--label <label>] [--takes N]
+[--before-ms N] [--after-ms N]`.
+
+- **Defaults:** `--takes 3` and `--label take`. The label is lowercased and
+  slugified to `[a-z0-9-]{1,16}`; use `before` and `after` for takes you will
+  compare.
+- **Length:** the Field Notes take is about 1.1 s, which covers its 250 ms
+  close with margin. Use `--after-ms` for longer animations, up to a total of
+  10 s.
 
 **Decision:** each take is a **fresh take**: a new Chromium process, a new
 browser context and a fresh navigation. Nothing persists between takes. This
@@ -193,26 +253,38 @@ agent's edited copy.
 
 **Per take:**
 
-1. Fail fast with a clear error if `url` does not respond.
+1. Fail fast if `url` does not respond: `url … did not respond (ECONNREFUSED).
+   Start the app server with the background tool, then retry.`
 2. Launch `/usr/bin/chromium` through Playwright, apply the viewport, scale
    factor and reduced-motion setting, and navigate.
-3. Wait for `ready`, then `settleMs`.
-4. Install a capture-phase `click` listener on `document`. The first click
-   records `event.timeStamp` (page clock) and `performance.timeOrigin +
-   event.timeStamp` (wall-clock ms).
+3. Wait for `ready` (10 s timeout; the error names the selector and suggests
+   checking it against the page or editing `ready`), then `settleMs`.
+4. Install a capture-phase listener on `document` for the trigger's first
+   event:
+   - `pointerdown` for click, falling back to `click`;
+   - `pointerover` for hover;
+   - `keydown` for press.
+
+   Record `event.type`, `event.timeStamp` (page clock) and
+   `performance.timeOrigin + event.timeStamp` (wall-clock ms). The spike
+   timed from `click`, and `pointerdown` came 1–4 ms earlier.
 5. Install the **trace sampler**: a `requestAnimationFrame` loop that, every
    frame, records the rAF timestamp and, for each watched element,
    re-queried with `document.querySelector(selector)` every frame:
    `getBoundingClientRect()` (x, y, width, height), computed `opacity`,
-   `display` and `visibility`, the `hidden` attribute and any listed extra
-   `attributes`. If the selector matches nothing, the element is `null` for
-   that sample. Animations are updated before rAF callbacks, so
-   each sample is the state about to be painted in that frame. This is
-   instrumentation: reading layout every frame has a cost. In the spike, the
-   same kind of sampler did not stop the defect reproducing.
+   `display` and `visibility`, the `hidden` attribute, and any listed
+   `attributes` and `styles`. If the selector matches nothing, the element is
+   `null` for that sample.
+
+   Animations are updated before rAF callbacks, so each sample is the state
+   about to be painted in that frame. This is instrumentation: reading layout
+   every frame has a cost. In the spike, the same kind of sampler did not
+   stop the defect reproducing.
 6. Start `Page.startScreencast` (`format: "jpeg"`, `quality: 80`,
    `everyNthFrame: 1`) and acknowledge every frame. Wait `recordBeforeMs`.
-7. Perform the trigger with Playwright's locator.
+7. Perform the trigger through the locator, with a 5 s timeout. On a miss,
+   the error lists up to 10 accessible names for that role (or the selector's
+   match count) so the agent can fix the scenario.
 8. Wait `recordAfterMs`, then stop the screencast and the sampler, and read
    the samples back.
 
@@ -228,101 +300,173 @@ and so on within one command.
   `chromeTimestampS*1000 − triggerWallMs`, rounded to 0.1.
 - `trace.json`: an array of samples
   `{ "msFromTrigger", "elements": { "<name>": { "x", "y", "width", "height",
-  "opacity", "display", "visibility", "hidden", "attributes" } | null } }`, where
-  `msFromTrigger = rafTimestamp − trigger event.timeStamp` (same page clock,
-  so exact to the frame).
-- `manifest.json`: see below.
-
-**`manifest.json`:** `takeId`, `label`, `n`, the scenario (inline copy: URL,
-viewport, ready state, trigger and watched elements), `reset: "fresh take:
-new Chromium process, new context, fresh navigation"`,
-`browser` (`browser.version()`), `playwrightVersion`, the viewport and scale
-factor, `app` (`git -C appDir rev-parse HEAD`, the SHA-256 of
-`git -C appDir diff HEAD`, and `git -C appDir status --porcelain` so new
-untracked files show; all `null` if `appDir` is not a Git repository), `trigger.wallMs`, `frameCount`,
-`traceSampleCount`, `sampler: "rAF getBoundingClientRect + computed style"`,
-`timingSource` (`"CDP screencast metadata.timestamp; frames arrive ~9–28ms
-after the page state they show"`) and `startedAt`. No per-file hashes.
+  "opacity", "display", "visibility", "hidden", "attributes", "styles" } | null } }`,
+  where `msFromTrigger = rafTimestamp − trigger event.timeStamp` (same page
+  clock, so exact to the frame).
+- `manifest.json`:
+  - identity: `takeId`, `label`, `n`;
+  - the scenario, as an inline copy;
+  - `reset: "fresh take: new Chromium process, new context, fresh navigation"`;
+  - `browser` (`browser.version()`) and `playwrightVersion`;
+  - `app`: `git -C appDir rev-parse HEAD`, the SHA-256 of
+    `git -C appDir diff HEAD`, and `git -C appDir status --porcelain` so new
+    untracked files show. All `null` if there is no `appDir` Git repository;
+  - `trigger`: `event`, `wallMs`;
+  - `frameCount` and `traceSampleCount`;
+  - `sampler: "rAF getBoundingClientRect + computed style"`;
+  - `timingSource: "CDP screencast metadata.timestamp; frames arrive ~9–28ms
+    after the page state they show"`;
+  - `startedAt`.
 
 **stdout:**
-`{"ok":true,"takes":[{"takeId","dir","frameCount","traceSampleCount","triggerFound":true}]}`.
-If the click listener never fires in a take, that take is kept with
-`"triggerFound": false` and `msFromTrigger` values of `null`. The command
-then returns `ok: false` with an `error` naming the take, and exits 1.
+
+```json
+{
+  "ok": true,
+  "takes": [
+    { "takeId": "…", "dir": "artifacts/motion/<take-id>", "frameCount": 70,
+      "traceSampleCount": 66, "triggerFound": true, "triggerEvent": "pointerdown",
+      "framesMs": [-296.4, 801.2] }
+  ],
+  "takeIds": "<id1>,<id2>,<id3>",
+  "next": "node /root/workspace/motion/cli.mjs inspect <id1>"
+}
+```
+
+If the trigger listener never fires in a take, that take is kept with
+`"triggerFound": false` and `msFromTrigger` values of `null`. The command then
+returns `ok: false`, with an `error` naming the take and suggesting the
+element may be covered or disabled, and exits 1.
 
 ## 6. `motion inspect`
 
-`motion inspect <take-id> --from <ms> --to <ms> [--crop x,y,w,h]`, with times
-in ms from the trigger and the crop in CSS pixels (equal to image pixels at
-scale 1).
+`motion inspect <take-id> [--from <ms>] [--to <ms>] [--crop x,y,w,h]`. Times
+are ms from the trigger. The window defaults to the whole take, so the first
+call shows the full table and the next can narrow the window.
 
-- **Table (always):** from `trace.json`, one row per sample in the window
-  where any watched value differs from the *previous sample* (≥ 0.5 px for
-  x, y, width and height; any change in opacity, display, visibility, hidden,
-  a listed attribute, or an element becoming `null` or reappearing), plus the
-  first and last rows.
-  Values are rounded to 0.01. **Columns:** one per watched field that changes
-  anywhere in the window, named `<element> <field>` with the trace.json field
-  names (for example `first-answer height`), so unchanging fields are left
-  out. It is capped at 60 rows; beyond that it asks for a narrower
-  window. Shape, with real values from spike take
-  `ab/rec60-marker-1` (last rows of the close):
+- **Table:** built from `trace.json` and returned as an array of row
+  strings. It has one row per sample in the window where any watched value
+  differs from the **last printed row**, plus the first and last rows.
+  Comparing with the last printed row, not the previous sample, keeps slow
+  drift visible. A value counts as changed if it moves ≥ 0.5 px (x, y, width,
+  height) or changes at all (opacity, display, visibility, hidden, a listed
+  attribute or style, or an element becoming `null` or reappearing).
+  - **Values** are rounded to 0.01.
+  - **Columns:** one per watched field that changes anywhere in the window,
+    named `<element> <field>` (for example `first-answer height`).
+  - **Length:** no row cap. Only changed rows are printed, and QM already cuts
+    any tool output above 100,000 characters.
+
+  Shape, with real values from spike take `ab/rec60-marker-1` (last rows of
+  the close):
 
   ```
   ms      first-answer height   first-answer hidden   second-question y
-  +230.1  2.25             false                 363.75
-  +246.8  0.59             false                 362.09
-  +263.5  76.78            false                 438.28
-  +280.1  0.00             true                  361.50
+  +230.1  2.25                  false                 363.75
+  +246.8  0.59                  false                 362.09
+  +263.5  76.78                 false                 438.28
+  +280.1  0.00                  true                  361.50
   ```
 - **Frames:** selects *every* screencast frame with
-  `from ≤ msFromTrigger ≤ to + 30`. The extra 30 ms is there because a frame
-  arrives about 9–28 ms after the page state it shows, so a window chosen
-  from the table still includes the frame showing its last row.
-  **Decision:** it never samples. If there are
-  more than 24, it skips the sheet and says "window has N frames; narrow it or
-  crop"; the table is still returned. If the window has no frames, the table
-  is returned with no sheet. It fails if `from ≥ to`, the crop is out of
-  bounds, or the take has no trace samples.
-- **Layout (Decision):** 4 columns and tiles 400 px wide, with height from
-  the crop's aspect ratio. So 24 frames make 6 rows, with a 4 px white gap.
-  Each tile is labelled `+264.3 ms #12` in its top-left corner, where `#12` is
-  the frame's file number in the take (`frames/000012.jpg`).
+  `from ≤ msFromTrigger ≤ to + 30`, and echoes `framesWindow` in stdout. The
+  extra 30 ms is there because a frame arrives about 9–28 ms after the page
+  state it shows, so a window chosen from the table still includes the frame
+  showing its last row.
+  - **Decision:** it never samples and has no frame cap. Frames that do not
+    fit one image continue on the next sheet (see Layout).
+  - **No frames:** the table is returned with no sheets.
+  - **Failures:** `from ≥ to`, or no trace samples when `watch` is non-empty.
+- **Crop:** given in CSS pixels and scaled by `frame width / viewport width`.
+  It is clamped to the frame, with a warning naming the frame size.
+- **Layout (Decision):** the only limit is the real one: every sheet image
+  fits 2000×2000 px and 4.5 MiB, which is what the model can see clearly.
+  - **Tiles:** 4 columns of 400 px tiles, with height from the crop's aspect
+    ratio and 4 px white gaps. A tile shrinks only if a single row would not
+    fit, for example a very tall crop.
+  - **Pages:** each sheet holds as many rows as fit in 2000 px. Remaining
+    frames continue, in time order, on the next sheet. Nothing is dropped,
+    skipped or refused.
+  - **Byte fallback:** after writing a sheet, check its size. If it is over
+    4.5 MiB (unlikely for UI frames), split that page into two and re-render.
+    This always ends, because one tile of at most 400×2000 px is under 3.2 MB
+    even uncompressed. `motion_view` would shrink it anyway, but sheets
+    should arrive sharp.
+  - **Labels:** each tile is labelled `+264.3 ms #12` in its top-left corner,
+    where `#12` is the frame's file number in the take
+    (`frames/000012.jpg`).
 - **FFmpeg recipe** (verified in the computer on September 27):
   1. For each frame:
-     `ffmpeg -i <frame>.jpg -vf "crop=w:h:x:y,scale=400:-2,drawtext=fontfile=/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf:text='<label>':fontsize=22:fontcolor=white:box=1:boxcolor=black@0.7:x=6:y=6" tile_NNN.png`.
+     `ffmpeg -i <frame>.jpg -vf "crop=w:h:x:y,scale=<W>:-2,drawtext=fontfile=/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf:text='<label>':fontsize=22:fontcolor=white:box=1:boxcolor=black@0.7:x=6:y=6" tile_NNN.png`.
   2. Then `ffmpeg -framerate 1 -i tile_%03d.png -vf "tile=4xR:padding=4:color=white" -frames:v 1 sheet.png`.
 
   Labels contain no `:` or `'`.
-- **Output:** writes `sheets/inspect_<from>_<to>_<crop>.png` inside the take
-  directory, where `<crop>` is `x-y-w-h` or `full`. Sheets of UI frames are
-  usually well under 1 MB. If one exceeds `motion_view`'s limits (4.5 MiB or
-  2000 px), it fails; crop or narrow the window.
-- **stdout:** `{"ok":true,"table":"<text>","sheet":"artifacts/motion/<take-id>/sheets/…png" | null,"sheetSkippedReason":null | "<text>","frames":N,"width","height","bytes"}`; the last three are `null` when there is no sheet.
+- **Output:** writes `sheets/inspect_<from>_<to>_<crop>_p<N>.png` inside the
+  take directory, where `<crop>` is `x-y-w-h` or `full` and `N` counts from 1.
+  Every sheet is within `motion_view`'s limits.
+- **stdout:**
+
+  ```json
+  {
+    "ok": true,
+    "table": ["ms  first-answer height  …", "+230.1  2.25  …"],
+    "framesWindow": [-50, 350],
+    "frames": 30,
+    "sheets": [
+      { "path": "artifacts/motion/<take-id>/sheets/inspect_-50_320_full_p1.png",
+        "fromMs": -48.2, "toMs": 247.9, "frames": 24 },
+      { "path": "artifacts/motion/<take-id>/sheets/inspect_-50_320_full_p2.png",
+        "fromMs": 263.5, "toMs": 346.8, "frames": 6 }
+    ],
+    "next": "call motion_view with the sheet covering the moment you care about"
+  }
+  ```
+
+  `sheets` is empty when the window has no frames.
 
 ## 7. `motion compare`
 
-`motion compare --before <take-id,…> --after <take-id,…> --from <ms> --to <ms>
-[--crop x,y,w,h]`. Frames are selected as in section 6.
+`motion compare --before <take-id,…> --after <take-id,…> [--from <ms>]
+[--to <ms>] [--crop x,y,w,h]`. The window, frames and crop work as in
+section 6.
 
-- **Checks:** refuses takes whose scenario name, URL, viewport, scale factor,
-  reduced-motion setting or browser version differ, naming the difference.
-  It warns, without refusing, when app revisions are equal across before
-  and after.
-- **Layout.** **Decision:** one row per take, before rows first, each row
-  labelled `before 1`, `after 2` and so on. Each row shows *every*
-  frame of that take in the window, left to right, with its own label.
-  Columns are not forced to line up, because takes deliver frames at
-  different times and forcing a grid would drop or repeat frames.
-- **Size (Decision):** tiles are 240 px wide, with at most 8 frames per row
-  and 8 rows (for example 4 before and 4 after), so the sheet stays under 2000
-  px. It fails if a row would have more than 8 frames ("narrow the window"),
-  or if the sheet exceeds the size limits. The same crop applies to all rows,
-  and each row starts with a label tile such as `before 1`.
-- **Tables:** prints the section 6 table for every take, labelled like the
-  sheet rows, so values can be compared take by take.
-- **Output:** writes `artifacts/motion/compare-<UTC>-<4 hex>/sheet.png` and a
-  `compare.json` listing its inputs, per-row frame counts and the tables.
+- **Refuses** takes whose URL, viewport, scale factor, reduced-motion
+  setting, trigger or browser version differ. The error names the field and
+  both values, and says "recapture with the same scenario".
+- **Warns but continues** when:
+  - the scenario name or watch list differs;
+  - either side has fewer than 3 takes ("a one-frame defect can be missed");
+  - before and after have the same app revision.
+- **Layout (Decision):** one row per take, before rows first. Each row shows
+  *every* frame of that take in the window, left to right, and its first tile
+  carries the row label (`before 1`, `after 2`) drawn over it, so no extra
+  tile is needed. Columns are not forced to line up, because takes deliver
+  frames at different times and forcing a grid would drop or repeat frames.
+- **Size (Decision):** as in section 6, the only limit is 2000×2000 px and
+  4.5 MiB per image.
+  - **Tiles:** 240 px wide, with 4 px gaps, so a row holds 8 frames.
+  - **Time slices:** when a take has more frames in the window, the window is
+    cut into consecutive time slices. Each slice becomes its own sheet showing
+    *all* takes for that stretch of time, so before and after stay side by
+    side on every sheet.
+  - **Many takes:** if the takes don't fit one sheet's height, they continue
+    on the next. Nothing is dropped, skipped or refused.
+- **Tables:** one section 6 table per take, labelled like the rows, so values
+  can be compared take by take.
+- **Output:** writes `artifacts/motion/compare-<UTC>-<4 hex>/sheet_p<N>.png`
+  and a `compare.json` with the inputs, warnings, sheets and tables.
+- **stdout:**
+
+  ```json
+  {
+    "ok": true,
+    "sheets": [
+      { "path": "artifacts/motion/compare-…/sheet_p1.png", "fromMs": 200.1, "toMs": 316.8 }
+    ],
+    "warnings": [],
+    "rows": [{ "label": "before 1", "takeId": "…", "frames": 9, "table": ["…"] }],
+    "next": "call motion_view with each sheet path"
+  }
+  ```
 - **What it does not do:** it never states whether the defect is present, and
   it applies no thresholds or "jump" flags; the agent judges each take.
 
@@ -347,17 +491,25 @@ record`, which is fine until then. It must say, briefly:
    viewed.
 2. The exact commands from sections 5–7, written out in full
    (`node /root/workspace/motion/cli.mjs capture --scenario
-   /root/workspace/motion/scenarios/field-notes-close.json --label before
-   --takes 3`, and so on), and that sheets are viewed with `motion_view`.
-3. The rebound-style lesson: a defect can last a single frame, so view every
+   /root/workspace/motion/scenarios/field-notes-close.json --label before`,
+   and so on). Point to `cli.mjs help`.
+3. For another app or interaction, write a scenario file (`cli.mjs help
+   scenario`); `watch` names where to look.
+4. Choose the window from the table, then view the sheets: pass a printed
+   `sheets[].path` to `motion_view` verbatim. Long windows produce several
+   sheets automatically; view the ones covering the moment that matters.
+5. The rebound-style lesson: a defect can last a single frame, so view every
    frame in the window and take several takes.
-4. Table times are exact page frame times. Sheet frame times are capture
+6. Table times are exact page frame times. Sheet frame times are capture
    times, about 9–28ms after the paint they show.
-5. After editing, repeat with three or more takes and use `motion compare`;
+7. After editing, capture new takes (3 by default) and use `motion compare`;
    report every take, including ones where the defect did not appear.
-6. Images last one turn; call `motion_view` again in later turns.
-7. Write the case (section 9) last; a GBrain failure is reported and never
+8. Images last one turn; call `motion_view` again in later turns.
+9. Write the case (section 9) last; a GBrain failure is reported and never
    stops the investigation.
+
+Its frontmatter `description` should use the words users use: "blink, jump,
+flicker, flash, glitch, layout shift, animation, transition".
 
 It must not mention Field Notes' cause or any fix.
 
