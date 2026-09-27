@@ -4,6 +4,19 @@ September 27, 2026. **Kickoff environment and handoff verified; ready to start
 the hack.** No additional credentials or environment setup are needed on this
 machine. The motion product is intentionally not implemented by this kickoff.
 
+**Build-ready checkpoint, September 27, 12:10 PM PT.**
+
+- **Docs:** brief, architecture, spec and plan were reviewed by three fresh
+  readers and all findings were fixed; every doc link resolves.
+- **Environment, checked at 11:57:**
+  - `npm run status` shows every QM, GBrain and computer container up;
+  - the demo server is stopped (start it with `npm run demo` for milestones
+    2–4);
+  - `https://charlies-pc.tail1d1ed7.ts.net` is served tailnet-only and
+    answers 401 until you sign in.
+- **Git:** `main` is the only branch.
+- **Start:** [plan.md](docs/plan.md) milestone 1.
+
 ## Working foundation
 
 - Private repository created and visibility verified:
@@ -92,7 +105,7 @@ Pre-build investigation, September 27, 9:20–10:55 AM PT:
   web chat shows attached PNG/JPEG/WebP inline; video gets a download card.
   `threadRef` names continue conversations, and the default is one shared
   thread. After a sandbox image rebuild: `npm stop && npm start`, one agent
-  command, then `computer.py --connect` for GBrain. Skills deploy with
+  command, then `python3 scripts/connect-gbrain.py` for GBrain. Skills deploy with
   `npm start` (`PUT /v1/deployment-layer`, applied within 30 s). The spec's
   Field Notes locators were validated on the live page in the computer, and
   FFmpeg label/tile commands were tested there.

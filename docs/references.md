@@ -12,13 +12,13 @@ checks, and [demo.md](demo.md) owns the target revision and reproduction.
 | --- | --- | --- |
 | [QM](https://github.com/yc-software/qm) | `1562826691680bff053c47347e88f032c336d84f`; CLI `@yc-software/qm@0.1.12` | MIT; runtime/CLI, generated deployment scaffold, and execution daemon used. [Notice](licenses/qm.txt). Two small environment patches apply to the pinned runtime image below; the `motion_view` image tool patch remains unimplemented. |
 | [GBrain](https://github.com/garrytan/gbrain) | `e78f1c38b947b053f3a46881340f74f316be855a`; binary `0.59.0.0` | MIT; separate server and thin CLI client. [Notice](licenses/gbrain.txt). |
-| [agent-browser](https://github.com/vercel-labs/agent-browser) | `d01253d9db28d75080e36da3c1c31ef89454731e`; npm `0.38.1` | Apache-2.0; installed capture/browser dependency. [License](licenses/agent-browser.txt). No vendored recorder fork. |
+| [agent-browser](https://github.com/vercel-labs/agent-browser) | `d01253d9db28d75080e36da3c1c31ef89454731e`; npm `0.38.1` | Apache-2.0; installed for ad-hoc exploration only; not the capture primitive. [License](licenses/agent-browser.txt). No vendored recorder fork. |
 | [T3 Code](https://github.com/pingdotgg/t3code) | `ab099178a7b7f9728843e90fc95ed90bb61d710d` | MIT; implementation reference only, no code copied. |
 | [Flowcard](https://github.com/newsbubbles/flowcard) | `d74d057e19058d732fc0121968daec348c058496` | No license file found at this revision; conceptual reference only, no code copied. |
 | [motion-contact-sheet](https://github.com/Kallin/motion-contact-sheet) | `198ee77d61b21448e2fbbe7c391aedbbeba24ca7` | MIT; implementation reference only, no code copied or package installed. |
 | [web-motion-skill](https://github.com/Schmandarine/web-motion-skill) | `74b7359277140f518cd33be224e6f86c158b629a` | README says MIT, but no license file found; conceptual reference only, no code copied. |
 | [Matt Pocock skills](https://github.com/mattpocock/skills) | `c55ee46073ed923f86ce59a5eb3b6d895095d1b7` | MIT; four selected skills copied project-locally. [Notice](licenses/mattpocock-skills.txt). |
-| [Playwright](https://github.com/microsoft/playwright) | npm `1.63.0` | Apache-2.0; setup/browser automation dependency. Use stock installed Chromium, not an assumed bundled browser. |
+| [Playwright](https://github.com/microsoft/playwright) | npm `1.63.0` | Apache-2.0; the capture primitive (CDP screencast through Playwright) and browser automation. Use stock installed Chromium, not an assumed bundled browser. |
 | [Radix primitives](https://github.com/radix-ui/primitives) | `2107c0e488247972a06be4248e5c98875f8e8aaa`; `@radix-ui/react-accordion@0.1.5` | MIT; unchanged published dependency in original minimal target app. [Notice](../demo/LICENSE.radix). |
 
 The target also pins `react` and `react-dom` to `18.0.0-rc.0` in its own

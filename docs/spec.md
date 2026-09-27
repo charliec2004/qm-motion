@@ -52,7 +52,7 @@ skill, shared-file or memory branches.
   `/root/workspace/` (that prefix is stripped). It rejects any `..` segment and
   any other absolute path. Evidence normally lives in `artifacts/motion/`, but
   screenshots the agent takes itself also work.
-- **Never fails on size (smart fallback).** The tool passes the bytes to pi's
+- **Never fails on image size (smart fallback).** The tool passes the bytes to pi's
   own `resizeImage` (the public export of `@earendil-works/pi-coding-agent`,
   which pi's read tool uses). With its defaults it returns an image of at
   most 2000×2000 px and 4.5 MiB, re-encoding as JPEG if needed.
@@ -106,8 +106,8 @@ calls QM's `/api/turn` with `gpt-6-sol` and `pi`, and saves QM's run record to
   the web server forwards a `threadRef` starting with `web:`, and core
   continues the existing session with that name (`sessions.getByThread`,
   `src/api/app-turn.ts:181`) or starts a new one. Without a name, every turn
-  goes to one shared conversation, `web:<user>:default`, so tests must always
-  pass `--thread`.
+  goes to one shared conversation, `web:<user>:default`. So `--thread` is
+  **required**: the script exits with a usage error without it.
 - `--timeout <seconds>`: replaces the 240-second abort. The 240 is hard-coded
   in `turn()` in `scripts/qm-session.mjs` (lines 45 and 60), so add a
   `timeoutMs` option there, defaulting to 240000 so smoke is unchanged.
@@ -132,8 +132,10 @@ unless the agent owns a `background` job, which kills a server started with
 - **Source:** `src/motion/`.
   - `cli.mjs` is the entry point (`capture | inspect | compare`).
   - The command modules sit alongside it.
-  - `scenarios/field-notes-close.json` is the demo scenario. The agent can
-    write its own anywhere under `/root/workspace`.
+  - `scenarios/field-notes-close.json` is **our test fixture** for milestones
+    2–4. It is never given to the agent, because its watch list points at the
+    defective panel. In real use the agent writes its own scenario
+    (`cli.mjs help scenario`) anywhere under `/root/workspace`.
 - **Copy into the computer:**
   `tar -C src -c motion | python3 scripts/computer.py tar -x -C /root/workspace`.
 - **Run:** `node /root/workspace/motion/cli.mjs <command> …`. The guidance
@@ -177,7 +179,7 @@ unless the agent owns a `background` job, which kills a server started with
 
   ```
   usage: node /root/workspace/motion/cli.mjs <command> [options]
-    capture --scenario <file.json> [--label before] [--takes 3] [--before-ms 300] [--after-ms 800]
+    capture --scenario <file.json> [--label <label>] [--takes 3] [--before-ms 300] [--after-ms 800]
         Fresh takes of one interaction; prints takeIds.
     inspect <take-id> [--from <ms>] [--to <ms>] [--crop x,y,w,h]
         Table of watched-element changes (read first) + sheets holding every
@@ -230,7 +232,7 @@ with an error naming the field.
 | `viewport`, `deviceScaleFactor`, `reducedMotion` | no | Defaults `960×720`, `1`, `"no-preference"`. |
 | `ready` | no | `selector` (CSS) that must be visible before the take, plus `settleMs` (default 350). Without it: page load plus `settleMs`. |
 | `setup` | no | Actions to run in order after `ready` and before recording, each shaped like `trigger` plus an optional `settleMs` (default 350) to wait afterwards. Use it to reach the starting state, for example `[{ "action": "click", "role": "button", "name": "Menu" }]` before a trigger that presses `Escape`. Setup is not recorded or timed. |
-| `watch` | no | 0–10 elements, each `{name, selector, attributes?, styles?}`. The first element matching `selector` is traced. `attributes` adds DOM attributes; `styles` adds computed styles (for example `"transform"`, `"clip-path"`). It names *where to look*, not what is wrong. With no `watch`, `inspect` returns only the sheet. |
+| `watch` | no | 0–10 elements, each `{name, selector, attributes?, styles?}`. The first element matching `selector` is traced. `attributes` adds DOM attributes; `styles` adds computed styles (for example `"transform"`, `"clip-path"`). It names *where to look*, not what is wrong. With no `watch`, `inspect` returns only sheets (no table). |
 | `recordBeforeMs`, `recordAfterMs` | no | Defaults 300 and 800, and overridable per command. Total at most 10000. |
 
 Field Notes locators come from `demo/src/main.jsx` and were validated on the
@@ -438,7 +440,7 @@ call shows the full table and the next can narrow the window.
 section 6.
 
 - **Refuses** takes whose URL, viewport, scale factor, reduced-motion
-  setting, trigger or browser version differ. The error names the field and
+  setting, `ready`, `setup`, trigger or browser version differ. The error names the field and
   both values, and says "recapture with the same scenario".
 - **Warns but continues** when:
   - the scenario name or watch list differs;
@@ -499,10 +501,11 @@ record`, which is fine until then. It must say, briefly:
    viewed.
 2. The exact commands from sections 5–7, written out in full
    (`node /root/workspace/motion/cli.mjs capture --scenario
-   /root/workspace/motion/scenarios/field-notes-close.json --label before`,
-   and so on). Point to `cli.mjs help`.
-3. For another app or interaction, write a scenario file (`cli.mjs help
-   scenario`); `watch` names where to look.
+   /root/workspace/<your-scenario>.json --label before`, and so on). Point to
+   `cli.mjs help`.
+3. Write a scenario file for the interaction being investigated (`cli.mjs
+   help scenario`); `watch` names where to look. Do not mention or ship the
+   Field Notes fixture.
 4. Choose the window from the table, then view the sheets: pass a printed
    `sheets[].path` to `motion_view` verbatim. Long windows produce several
    sheets automatically; view the ones covering the moment that matters.
@@ -519,7 +522,9 @@ record`, which is fine until then. It must say, briefly:
 Its frontmatter `description` should use the words users use: "blink, jump,
 flicker, flash, glitch, layout shift, animation, transition".
 
-It must not mention Field Notes' cause or any fix.
+It must not mention Field Notes' cause or any fix. In the same milestone,
+change `deployment/sandbox/skills/environment-operation/SKILL.md` to stop
+calling agent-browser "the recorder"; the recorder is `motion capture`.
 
 **Deploying it (verified from the CLI and database, September 27):**
 `npm start` runs `qm up`, which sends `deployment/sandbox/skills/` to core
@@ -538,7 +543,7 @@ Verify with `gbrain get` and `gbrain search '<token>'`.
 
 ## 10. Tests
 
-Only these checks are required. Do not add others.
+Only these checks are required.
 
 **Milestone 1 (the only test-only real turn):**
 
@@ -555,8 +560,15 @@ reading the code. Do not spend turns testing them.
 **Milestones 2–4:** run the commands directly in the computer, as the plan's
 "done when" says. No QM turns.
 
-**Milestone 5, the real investigation** (after the skill is deployed and the
-server handed to the agent). Send the user's request exactly, with no hints:
+**Milestone 5, the investigation turn.**
+
+1. Deploy the skill.
+2. Run `npm run demo -- reset`.
+3. Hand the server to the agent in its **own** thread
+   (`--thread handoff-<timestamp>`, [demo.md](demo.md#hand-the-server-to-qm)).
+4. Send the user's request in a **new** thread, exactly, with no hints:
+   `node scripts/qm-turn.mjs --thread investigate-<timestamp> --timeout 1200
+   "<request>"`. You can also type it in the web UI. The request:
 
 > When I close the first FAQ, the page seems to blink or jump at the end.
 > Reproduce it, inspect the motion, and fix it while keeping the close
@@ -565,8 +577,9 @@ server handed to the agent). Send the user's request exactly, with no hints:
 Tool success, checked by us from the reply and the take files: the agent's
 description matches the trace, namely the first answer collapsing, then
 reappearing for one sample around +250–285 ms, then hiding. It also cites a
-frame or sample it actually viewed. The fix is a demo goal, not a pass
-condition.
+frame or sample it actually viewed. It also writes the GBrain case (check
+with `npm run computer -- gbrain get cases/motion-…`). The fix is a demo goal,
+not a pass condition.
 
 **Milestone 6:** the rehearsal runs are the tests. Do not add others.
 

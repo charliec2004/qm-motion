@@ -129,15 +129,16 @@ Three pieces. Everything else already exists.
 
 | Command | Input | Output |
 | --- | --- | --- |
-| `motion capture` | A saved scenario file (URL, viewport, ready condition, trigger target, elements to watch, recording length) and a label | Take ID; `artifacts/motion/<take-id>/` containing the frames, `frames.json` (Chrome timestamps), `trace.json` (per-frame values of watched elements) and `manifest.json` |
+| `motion capture` | A saved scenario file (URL, viewport, ready condition, trigger target, elements to watch, recording length) and a label | Take IDs (3 takes by default), each with `artifacts/motion/<take-id>/` containing the frames, `frames.json` (Chrome timestamps), `trace.json` (per-frame values of watched elements) and `manifest.json` |
 | `motion inspect` | Take ID, `--from`/`--to` in ms from the trigger, optional `--crop x,y,w,h` | A text table of changed trace values, plus sheet PNGs holding every frame in the window. |
 | `motion compare` | The take IDs of the before takes and the after takes (3 by default each), same window and crop | One table per take plus sheets with one row per take, aligned on the trigger. Mismatched URL, viewport or browser is refused. |
 
 The scenario is data, not code: the tool knows nothing about Field Notes or
-its bug. One scenario file for the Field Notes close interaction is enough for
-the MVP.
+its bug. The agent writes its own scenario for each investigation; our Field
+Notes scenario is only a test fixture for milestones 2–4.
 
-**Size is never a failure.** The only real limit is per image: 2000×2000 px
+**Image size is never a failure.** Only files over 50 MB are refused (a
+transfer limit). The only per-image limit is 2000×2000 px
 and 4.5 MiB, which is what pi sends and the model sees clearly. `motion
 inspect` and `compare` split frames across as many sheets as needed, each
 within that limit, with a byte check that re-splits. `motion_view` shrinks
@@ -159,8 +160,9 @@ any oversized image with pi's own `resizeImage` instead of refusing it. See
 `deployment/` is the CLI-managed deployment directory. `.upstream/qm/` is a
 pinned reference checkout, not the running core. `deployment/runtime/` is an
 image-overlay build context accepted by `qm up --build-from runtime`, not a
-QM source fork. Its core Dockerfile applies the tracked
-[local-core-address.patch](../deployment/runtime/patches/local-core-address.patch)
+QM source fork. Its core Dockerfile applies every tracked patch in
+`deployment/runtime/patches/` in filename order (starting with
+[local-core-address.patch](../deployment/runtime/patches/local-core-address.patch))
 to the original digest-pinned core image; the other overlay Dockerfiles retain
 their original images. The one-line fix passes `QM_CORE_CONTAINER` through
 `localSandboxEnv`, allowing core to address the local computer's execution
@@ -225,7 +227,7 @@ measurement and by eye. Evidence and scripts are in ignored
   and 0.1× still reproduces the rebound, but it remains one frame on screen.
 
 **Decision.** `motion capture` is a small Playwright script using the raw CDP
-screencast. It does the reset, navigation, wait, trigger and frame recording
+screencast. It starts a fresh take, then navigates, waits, triggers and records frames
 in one process, so the trigger and frames share one real clock, and Chrome's
 frame timestamps are the manifest's timing source. agent-browser remains
 installed for ad-hoc exploration; its constant-rate video is not timing
@@ -307,7 +309,7 @@ GPT-6 Sol as pixels:
 
 **Why it is missing.** This is not a pi limitation. pi's own built-in `read`
 (`pi-coding-agent/dist/core/tools/read.js`) returns image blocks and
-auto-resizes images to at most 2000×2000 px and 4.5 MB
+auto-resizes images to at most 2000×2000 px and 4.5 MiB
 (`utils/image-resize-core.js`). QM turns off pi's built-in tools
 (`noTools: "builtin"`, `pi-harness.ts:1595`) and supplies its own tool set,
 which has no image-returning tool. pi's limits are the precedent for the
@@ -375,11 +377,11 @@ To apply a rebuilt sandbox image:
    (PROGRESS.md). The new core process re-reads the image ID.
 2. Run any agent command (for example a real turn that calls `execute`), so
    core recreates the computer from the new image.
-3. Run `python3 scripts/computer.py --connect`. The recreated container lacks
-   the `qm-motion-brain-clients` network, and `start.sh` only connects
-   computers that existed when it ran. Confirm with
-   `npm run computer -- gbrain whoami`; if the client is missing, run
-   `python3 scripts/connect-gbrain.py`.
+3. Run `python3 scripts/connect-gbrain.py`. The recreated container lacks the
+   `qm-motion-brain-clients` network, and `start.sh` only connects computers
+   that existed when it ran. The script reconnects the network, reuses the
+   saved client, installs it only if missing, and verifies with
+   `gbrain whoami`.
 
 ## Memory and comparison boundaries
 
@@ -399,8 +401,8 @@ The compact case contains request, app revision, reproduction/reset, observed
 intervals, diagnosis, fix, verification, and evidence references. Write it
 after visual reporting; retry independently if memory is down.
 
-Every take is a fresh take, aligned to the trigger. Reject or label a changed
-viewport, browser, app state or interaction. A diff measures
+Every take is a fresh take, aligned to the trigger. `motion compare` refuses
+or warns on mismatched takes ([spec §7](spec.md#7-motion-compare)). A diff measures
 change, while the agent evaluates intent. Capture can affect performance;
 nominal FPS cannot prove smoothness. Any optional layout-shift instrumentation
 must retain click-induced movement instead of applying CLS's recent-input

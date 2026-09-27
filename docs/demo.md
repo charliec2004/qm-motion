@@ -26,8 +26,8 @@ The actual QM computer also passed the readiness check using local Chromium
 host. A short host browser video is in the ignored
 `artifacts/demo-target/recording/` directory.
 Sandbox startup, status, repeated startup and reset were exercised. Reset
-retained an operator-written sentinel in the old run and created a clean local
-Git baseline in the new run. The temporary host dev server was stopped after
+retained an operator-written sentinel in the old working copy and created a
+clean local Git baseline in the new working copy. The temporary host dev server was stopped after
 verification; the supported demo command runs the app in the QM computer.
 
 The final agent acceptance check also loaded both runtime skills, started and
@@ -107,6 +107,9 @@ second server. Avoid concurrent host operations while a QM turn is completing.
 
 ## Warm-up and 90-second script
 
+**Primary plan:** present a labelled recording of a real investigation,
+because a full loop takes minutes. Run it live only if measured timing fits.
+
 Before presenting, warm the model connection, browser, target build and memory
 client; confirm the first FAQ opens; reset the target; verify evidence storage;
 hand the server to QM as above; then check that actual image blocks reach the
@@ -118,13 +121,13 @@ Full workflow timing is unmeasured.
   close animation and accessible interaction.”
 - **10–25s:** Show the short before capture and trigger-aligned evidence.
 - **25–40s:** Let the model identify the visible failure and inspect relevant code.
-- **40–60s:** Show its chosen edit and rerun the identical reset/interaction.
+- **40–60s:** Show its chosen edit and fresh takes of the identical interaction.
 - **60–80s:** Show before/after frames plus the model's qualified judgment; retain
   the compact case record and evidence references in GBrain.
 - **80–90s:** Retrieve that record and state what was verified.
 
 This schedule is the planned product demo, not an implemented scripted repair.
-If the final live workflow fails, use a previously verified saved run and label
+If the final live workflow fails, use a previously verified saved investigation recording and label
 it as recorded. If only setup evidence exists, show the real target and explain
 the implementation boundary; do not portray setup checks as an agent repair.
 
@@ -143,7 +146,7 @@ agent a diagnosis or the fixing version.
 Latency affects only the demo and test tooling, not the motion tools. One cold
 command turn took 78.467s, and a full capture → fix → compare loop in one
 turn is unmeasured and likely takes minutes. That is longer than the 60–90
-second slot, so plan to show a labelled recording of a real run. The
+second slot, so plan to show a labelled recording of a real investigation. The
 `qm-turn.mjs` 240-second abort will be lifted by the `--timeout` flag that
 milestone 1 adds
 ([spec §2](spec.md#2-running-real-turns)).

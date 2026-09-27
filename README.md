@@ -68,7 +68,7 @@ Read [PROGRESS.md](PROGRESS.md) for exact evidence and limitations,
 [docs/demo.md](docs/demo.md) for reproduction and reset. Architecture,
 provenance, licenses, and optional later releases are in [docs/](docs/).
 
-First implement a bounded capture-to-vision path in a real QM turn. Incoming
-attachments pass vision checks; returning a screenshot filename from a tool
-still does not deliver its pixels to the model. Capture/inspect/compare product
-operations, automated repair, and the complete demo remain unimplemented.
+First add `motion_view` and prove it with one withheld-code turn ([plan
+milestone 1](docs/plan.md#milestones)). Incoming attachments already pass vision
+checks; the `motion` commands, `motion_view` and the demo repair remain
+unimplemented.

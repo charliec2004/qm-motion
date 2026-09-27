@@ -48,7 +48,7 @@ accordion bug ([demo.md](demo.md)).
    describes the interaction in a small scenario file: which page, what to do,
    which elements to watch. One command then does the rest.
    - **capture:** a fresh headless Chrome loads the page and performs the
-     action. It records every frame Chrome draws, with Chrome's exact
+     action. It records every frame Chrome's screencast delivers, with Chrome's exact
      timestamps, while a tiny in-page script logs the watched elements' size,
      position and visibility every frame.
    - **inspect:** turns one recording into a short text table (only moments
@@ -58,7 +58,8 @@ accordion bug ([demo.md](demo.md)).
      action.
 2. **`motion_view`**, a small addition to QM itself. The model normally gets
    only file paths; this hands it a grid as an actual picture, shrinking it if
-   needed, so size never causes a failure.
+   needed, so image size never causes a failure (only files over 50 MB are
+   refused, a transfer limit).
 3. **Instructions for the agent**, a QM skill: read the numbers first, confirm
    with the picture, record several times, compare after fixing, and report
    honestly.
@@ -114,7 +115,7 @@ Every doc uses these words in exactly these senses.
 | **Turn** | One user message plus the agent's entire reply, which may include many tool calls. |
 | **Computer** | The QM-managed Docker container where the agent runs commands. Chromium and the target app run there too; files live under `/root/workspace`. |
 | **Target** | The app under investigation. For the MVP, Field Notes ([demo.md](demo.md)). |
-| **Scenario** | A saved data file describing one interaction: URL, viewport, when the page is ready, what to click, and how long to record afterwards. |
+| **Scenario** | A data file the agent writes describing one interaction: URL, viewport, when the page is ready, optional setup steps, the trigger (click, hover or press), elements to watch, and the record window. |
 | **Trigger** | The user action a take is aligned to, such as the click. Times are given in ms from the trigger. |
 | **Take** | One recording of a scenario. Each has a **take ID** and a folder `/root/workspace/artifacts/motion/<take-id>/` in the computer. (QM's own "run" is a separate thing: one agent turn's record.) |
 | **Fresh take** | How every take starts: a new Chromium process, a new browser context and a fresh navigation. Not the same as a source reset. |
@@ -144,7 +145,7 @@ Every doc uses these words in exactly these senses.
    to the interaction trigger and show whether the user's intended behavior is
    satisfied. Pixel differences report change, not quality.
 5. The user sees durable, accessible evidence and an honest result, including
-   failures or inconclusive runs. Recorded frame rate is not proof of smoothness.
+   failures or inconclusive takes. Recorded frame rate is not proof of smoothness.
 6. A compact case is written to GBrain and retrieved in a fresh session. A memory
    failure is reported visibly and does not break capture, inspection, or reporting.
 

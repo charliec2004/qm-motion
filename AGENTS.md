@@ -105,7 +105,7 @@ Verify real model output, real command execution, and actual image delivery.
 A PNG path in a text tool result does not put an image in model vision context.
 Retain browser/version, viewport, app revision, initial state, interaction steps,
 actual timestamps, capture overhead caveats, and durable evidence references.
-Align before/after runs to the interaction trigger, and reset state between runs.
+Align before/after takes to the trigger. Every take is a fresh take; never source-reset between before and after.
 Pixel differences measure change; the agent judges whether intent is satisfied.
 Do not claim smoothness from nominal FPS or filter click-induced movement away.
 Memory failure must leave capture and inspection usable and visibly report failure.

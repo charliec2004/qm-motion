@@ -69,8 +69,8 @@ not a script calling our code directly. "Run directly" means
 | 2 | 30–60 | `motion capture` with the trace sampler and the Field Notes scenario ([spec §3–5](spec.md#5-motion-capture)) | Run directly in the computer (no QM turn): `--takes 3` writes frames, `frames.json`, `trace.json` and a manifest, and the traces show the one-frame reopen. |
 | 3 | 60–80 | `motion inspect` ([spec §6](spec.md#6-motion-inspect)) | Run directly: prints the table and writes sheets (split automatically) for a take from milestone 2. |
 | 4 | 80–100 | `motion compare` ([spec §7](spec.md#7-motion-compare)) | Run directly on the milestone 2 takes: per-take tables plus sheets, and a take with a different viewport is refused (copy the scenario with another `viewport` and capture 1 take). |
-| 5 | 100–160 | Guidance skill ([spec §8](spec.md#8-agent-guidance-deploymentsandboxskillsmotion-workflowskillmd)); `npm run demo -- reset`; the server is handed to the agent ([spec §2](spec.md#2-running-real-turns)) | **The real run:** in one turn the agent captures, reads the table, views the sheet and correctly describes the rebound, citing the frame (tool success). It writes the GBrain case ([spec §9](spec.md#9-gbrain-case)). Demo goal, not required: it also fixes the bug and shows before/after with `motion compare`. |
-| 6 | 160–225 | Rehearse, fix failures, freeze | A second real run from reset; one fresh turn retrieves the case; a labelled recording of a real run exists; PROGRESS.md updated. See [demo.md](demo.md). |
+| 5 | 100–160 | Guidance skill ([spec §8](spec.md#8-agent-guidance-deploymentsandboxskillsmotion-workflowskillmd)); `npm run demo -- reset`; the server is handed to the agent ([spec §2](spec.md#2-running-real-turns)) | **The investigation turn:** in one turn the agent captures, reads the table, views the sheet and correctly describes the rebound, citing the frame (tool success). It writes the GBrain case ([spec §9](spec.md#9-gbrain-case)). Demo goal, not required: it also fixes the bug and shows before/after with `motion compare`. |
+| 6 | 160–225 | Rehearse, fix failures, freeze | A second investigation turn after a source reset; one fresh turn retrieves the case; a labelled recording of a real investigation exists; PROGRESS.md updated. See [demo.md](demo.md). |
 
 Only milestones 1, 5 and 6 use real QM turns. Everything else is checked by
 running our commands directly, which is fast and free.
@@ -89,7 +89,7 @@ environment failure as a finished milestone.
   QM's. The model read a withheld code correctly (`pi-probe.mjs` and
   `pi-result.json` in `artifacts/openai-tool-image-probe/`). A direct API
   call also passed. Only QM's tool wrapper (read as pass-through) and our new
-  code remain, and test 2 covers both. If it fails, the fault is in our patch
+  code remain, and the milestone 1 pass check ([spec §10](spec.md#10-tests)) covers both. If it fails, the fault is in our patch
   or the wrapper.
 - **A single missed frame (milestones 2 and 5).** The rebound is on screen for
   exactly one frame, and a skipped screencast frame can hide it. Mitigations:
@@ -122,15 +122,14 @@ Cut from the top when time runs short.
 
 1. Metrics, heatmaps, optical flow, motion scores, profiler integration.
 2. Chrome animation details (`animations.json`, [spec §7a](spec.md#7a-chrome-animation-details-optional-cut-early)).
-3. A general interaction language or broad app support; keep one scenario file.
+3. Interaction types beyond click, hover, press and setup steps.
 4. Multiple providers, harnesses or browsers, polished UI, dashboards.
 5. Baking the CLI into the sandbox image; keep running it from `/root/workspace`.
-6. Smart frame selection; keep a fixed window plus manual crop.
-7. Semantic memory; keep the scoped case write and keyword retrieval, and
+6. Semantic memory; keep the scoped case write and keyword retrieval, and
    report any memory blocker separately.
 
-Never cut the core loop: request → visible frames → agent edit → repeat →
-visible comparison. Never replace the real target with an invented bug, or
+Never cut a tool from the loop: capture, inspect, compare and
+`motion_view`. A successful agent fix is a demo goal. Never replace the real target with an invented bug, or
 image delivery with a filename.
 
 ## Next concrete task

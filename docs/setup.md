@@ -1,6 +1,6 @@
 # Linux setup and Tailscale access
 
-Run commands from the repository root. This is a Linux x86_64 prototype, tested
+Run commands from the primary checkout root (worktrees lack the ignored state). This is a Linux x86_64 prototype, tested
 with Docker 29.7.2, Compose 5.5.0, Node 25.1.0, npm 11.6.2, Python 3, Git, curl,
 OpenSSL, and host Chromium `/usr/bin/chromium` 148.0.7778.96. Docker must work
 without an interactive elevation prompt. Bootstrap downloads several large

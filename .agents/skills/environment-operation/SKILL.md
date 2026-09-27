@@ -3,7 +3,7 @@ name: environment-operation
 description: Operate this QM Motion developer deployment, inspect its Docker computer, and troubleshoot QM or GBrain. Use for local setup and environment checks.
 ---
 
-Run from the repository root. Read `PROGRESS.md` and `docs/setup.md` first.
+Run from the primary checkout root (worktrees lack the ignored state). Read `PROGRESS.md` and `docs/setup.md` first.
 `npm run bootstrap` builds dependencies; `npm start`, `npm stop`, and
 `npm run status` control only this deployment. Stop must retain volumes.
 `npm run login` opens the supported one-use administrator login without printing
