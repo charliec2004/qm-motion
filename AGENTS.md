@@ -40,6 +40,11 @@ these and cannot run services. Verification status is in PROGRESS.md.
 - `npm run smoke`: run the environment checks and retain ignored evidence.
 - `npm run smoke:ui`: verify real web input, tool execution, and rendered reply.
 - `npm run demo`: prepare/start the pinned upstream demo target.
+- `npm run trailhead -- install|scan|probe [url]|status`: prime a leak-free
+  Trailhead rehearsal, re-check it, or check the agent's FAQ for the close
+  rebound ([docs/rehearsal.md](docs/rehearsal.md)).
+- `npm run preview -- start|status|stop`: tailnet live view of the agent
+  computer's dev server (port 5173) at `https://<tailnet-host>:8443/`.
 - `npm stop`: stop this project's services, retaining volumes and workspaces.
 - `cd deployment && npm exec qm -- check`: validate deployment configuration.
 - `cd deployment && npm exec qm -- check --live`: unsupported for Docker in 0.1.12.

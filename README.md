@@ -9,6 +9,12 @@ extension is the next implementation task.
 first. What existed before the hackathon build window is disclosed in
 [starting-point.md](docs/starting-point.md).
 
+**Run the demo.** [docs/rehearsal.md](docs/rehearsal.md) is the step-by-step
+runbook: reset to a leak-free state (`npm run trailhead -- install`), watch the
+page live over Tailscale (`npm run preview -- start`), the three prompts to
+paste into QM, the checks after each one (`npm run trailhead -- probe`), and
+how to record and present it.
+
 ## Run on Linux; access over Tailscale
 
 Verified on Linux x86_64 with Docker + Compose, Node 25 (24+ required), npm,
