@@ -66,7 +66,7 @@ const { chromium } = require("/opt/qm-motion/node_modules/playwright");
 cat > "$scenario" <<J
 {"name":"operator-probe","url":"$url","viewport":{"width":960,"height":720},"ready":{"selector":"[aria-controls=\"$target\"]","settleMs":400},
 "trigger":{"action":"click","selector":"[aria-controls=\"$target\"]"},
-"watch":[{"name":"answer","selector":"#$target"}],"recordBeforeMs":100,"recordAfterMs":700}
+"watch":[{"name":"answer","selector":"[id=\"$target\"]"}],"recordBeforeMs":100,"recordAfterMs":700}
 J
 cd /root/workspace
 node motion/cli.mjs capture --scenario "$scenario" --label opprobe --takes 3 > /tmp/opprobe.json 2>/dev/null || { cat /tmp/opprobe.json; rm -f /tmp/opprobe.json; exit 1; }
@@ -78,7 +78,8 @@ const pts = trace.filter(s => s.msFromTrigger >= 0).map(s => ({ ms: s.msFromTrig
 let min = Infinity, rebound = null;
 for (const p of pts) { if (p.h === null) break; if (p.h < min) min = p.h; else if (p.h - min > 5 && !rebound) rebound = { ...p, from: min }; }
 const tail = pts.filter(p => p.ms > 200 && p.ms < 360).map(p => `${p.ms.toFixed(0)}ms:${p.h === null ? "hidden" : p.h.toFixed(1)}`).join("  ");
-console.log(rebound ? `REBOUND at +${rebound.ms.toFixed(0)} ms (${rebound.from.toFixed(1)} -> ${rebound.h.toFixed(1)} px)` : "no rebound", "|", tail);' "$t"
+const measured = pts.some(p => p.h !== null);
+console.log(!measured ? "INCONCLUSIVE (answer not measured)" : rebound ? `REBOUND at +${rebound.ms.toFixed(0)} ms (${rebound.from.toFixed(1)} -> ${rebound.h.toFixed(1)} px)` : "no rebound", "|", tail);' "$t"
 done
 REMOTE
   exit $?
