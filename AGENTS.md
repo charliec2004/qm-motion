@@ -7,10 +7,11 @@ This kickoff prepares the environment; the motion extension is still to build.
 ## Read first
 
 - `PROGRESS.md`: actual checks, blockers, and the next concrete task.
-- `docs/brief.md`: scope and acceptance criteria.
+- `docs/brief.md`: scope, acceptance criteria, and the terms every doc uses.
 - `docs/architecture.md`: component ownership and evidence flow.
 - `docs/setup.md`: environment and credentials.
 - `docs/plan.md`: ordered implementation work and the cut list.
+- `docs/spec.md`: exact contracts: formats, flags, outputs, errors, tests.
 - `docs/demo.md`: target revision, reproduction, and presentation.
 - `docs/references.md`: pins, licenses, and reused code.
 

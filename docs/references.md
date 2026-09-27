@@ -10,7 +10,7 @@ checks, and [demo.md](demo.md) owns the target revision and reproduction.
 
 | Project | Inspected source commit / installed version | License and use |
 | --- | --- | --- |
-| [QM](https://github.com/yc-software/qm) | `1562826691680bff053c47347e88f032c336d84f`; CLI `@yc-software/qm@0.1.12` | MIT; runtime/CLI, generated deployment scaffold, and execution daemon used. [Notice](licenses/qm.txt). Two small environment patches apply to the pinned runtime image below; motion image bridge remains unimplemented. |
+| [QM](https://github.com/yc-software/qm) | `1562826691680bff053c47347e88f032c336d84f`; CLI `@yc-software/qm@0.1.12` | MIT; runtime/CLI, generated deployment scaffold, and execution daemon used. [Notice](licenses/qm.txt). Two small environment patches apply to the pinned runtime image below; the `motion_view` image tool patch remains unimplemented. |
 | [GBrain](https://github.com/garrytan/gbrain) | `e78f1c38b947b053f3a46881340f74f316be855a`; binary `0.59.0.0` | MIT; separate server and thin CLI client. [Notice](licenses/gbrain.txt). |
 | [agent-browser](https://github.com/vercel-labs/agent-browser) | `d01253d9db28d75080e36da3c1c31ef89454731e`; npm `0.38.1` | Apache-2.0; installed capture/browser dependency. [License](licenses/agent-browser.txt). No vendored recorder fork. |
 | [T3 Code](https://github.com/pingdotgg/t3code) | `ab099178a7b7f9728843e90fc95ed90bb61d710d` | MIT; implementation reference only, no code copied. |
@@ -49,7 +49,7 @@ Docker computer's execution daemon. The patch applies with `git apply --check`
 in the image and the rebuilt running core passed real agent execution.
 Other overlay Dockerfiles are unchanged `FROM` references to the original
 web-ui, auth, and portal images. This environment correction does not implement
-the motion evidence bridge.
+the `motion_view` image tool.
 
 The second [patch](../deployment/runtime/patches/model-request-retry.patch) sets
 Pi's supported `retry.provider.timeoutMs=60000` and `maxRetries=1` in QM's
@@ -93,7 +93,7 @@ Installed packages were `chromium=154.0.8037.57-1~deb12u1` and
   does not select the computer backend: configure `sandbox.backend: local`.
   A sandbox needs the execution daemon as well as browser binaries. The
   `skills-seed/browse/SKILL.md` remote-browser workflow is not our capture path.
-  The deployed `read` tool is text-only; exact proposed bridge locations are
+  The deployed `read` tool is text-only; the proposed `motion_view` patch is
   in [architecture.md](architecture.md). No complete bundled equivalent of
   our intended reproduce/inspect/edit/compare loop was established in this
   scoped source review.
@@ -109,8 +109,10 @@ Installed packages were `chromium=154.0.8037.57-1~deb12u1` and
   does not prove model vision.
 - **agent-browser:** [recording documentation](https://agent-browser.dev/recording)
   and `cli/src/native/recording.rs` provide FFmpeg-backed recording, cursor
-  overlays, timestamped contact sheets, and changed-region selection. This
-  is the chosen capture foundation, not a reason to write a new recorder.
+  overlays, timestamped contact sheets, and changed-region selection. It stays
+  installed for exploration, but measurement showed its fixed-rate video
+  discards Chrome's frame timestamps, so it is not our capture primitive
+  ([architecture.md](architecture.md#capture-measured)).
 - **Flowcard:** `server.py`, `flowcard/card.py`, and `flowcard/compare.py`
   informed interval/region inspection and paired filmstrip presentation.
   Its comparison assumes the same scene start/FPS; our manifest must instead
@@ -125,8 +127,8 @@ Installed packages were `chromium=154.0.8037.57-1~deb12u1` and
   analyzer framework is copied.
 - **Playwright:** the official [Screencast API](https://playwright.dev/docs/api/class-screencast)
   supports video and timestamped frame callbacks; [Trace Viewer](https://playwright.dev/docs/trace-viewer)
-  supplies action/DOM context. These are references and setup tools here;
-  the selected product recorder remains agent-browser.
+  supplies action/DOM context. Our `motion capture` uses Playwright's
+  CDPSession to read the raw screencast directly.
 
 ## Skills and original work
 

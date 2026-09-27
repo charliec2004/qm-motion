@@ -75,13 +75,29 @@ supported GPT-6 Sol catalog registration are applied by startup.
 Use [setup.md](docs/setup.md), including the documented ports and latency limits.
 
 Incoming-image vision is verified. **Automatic capture-tool image delivery is
-not implemented**: the deployed QM `read` tool returns text. The first coding task
-is the narrow scoped image-result bridge and bounded capture manifest described
-in [architecture.md](docs/architecture.md#first-product-dependency-image-delivery).
-Prove a real QM turn sees intermediate frames, then follow
-[plan.md](docs/plan.md) for inspection, real diagnosis/edit, repeat/compare,
-case persistence, and rehearsal. There is no completed before/after repair or
-measured full 90-second product demo yet.
+not implemented**: the deployed QM `read` tool returns text.
+
+Pre-build investigation, September 27, 9:20–10:55 AM PT:
+
+- **Code reading** (not a live turn). In the running core and pi 0.82.0, a tool
+  returning a pi image block reaches GPT-6 Sol as `input_image` in
+  `function_call_output`. Only a new tool plus a byte read on `ToolContext` is
+  missing; MCP drops images.
+- **API probe** (real call, outside QM). `gpt-6-sol` on the Responses API read
+  a withheld six-digit code from a PNG returned as a tool result, in 2 of 2
+  variants; `artifacts/openai-tool-image-probe/`.
+- **Capture spike** (measured in the QM computer). The one-frame rebound was
+  caught in 7 of 7 raw CDP screencast runs, 13 of 14 agent-browser runs at
+  60fps, and 2 of 3 at 30fps. Recording did not suppress it, and slow motion
+  does not widen it. Raw screencast is now the chosen capture primitive.
+  Evidence is in ignored `artifacts/motion-spike/`.
+
+Details and constraints (images last one turn, size budget, sandbox rebuild
+recreates the computer) are in
+[architecture.md](docs/architecture.md#image-delivery-verified-by-reading-the-code).
+The first coding task is `motion-evidence-image.patch` plus a real withheld-code
+turn; then follow [plan.md](docs/plan.md). There is no completed before/after
+repair or measured full 90-second product demo yet.
 
 Start with `npm start` and [administrator sign-in](docs/setup.md#sign-in-from-your-mac);
 `npm run login` is for the Linux desktop. Use `npm run demo` for the target.

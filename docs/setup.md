@@ -196,9 +196,9 @@ Smoke waits for actual computer parking before its independent Docker reads.
   provider verification. A reference checkout alone changes neither runtime
   code nor model availability.
 - Image attachments work. Deployed QM's `read` tool still returns text; the
-  small capture-tool image-result bridge is the first MVP dependency, detailed
-  in [architecture.md](architecture.md). No capture/inspect/compare command
-  has been implemented by this kickoff.
+  small `motion_view` image tool is the first MVP dependency, detailed in
+  [architecture.md](architecture.md#image-delivery-verified-by-reading-the-code).
+  No `motion` capture/inspect/compare command has been implemented yet.
 - GBrain runs without embeddings; keyword search is verified. Its `whoami`
   can report `agent_ready: false` for optional delegated-agent grants while
   our intended read/write operations work. Do not expand grants just for that

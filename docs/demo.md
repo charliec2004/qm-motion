@@ -126,3 +126,15 @@ This schedule is the planned product demo, not an implemented scripted repair.
 If the final live workflow fails, use a previously verified saved run and label
 it as recorded. If only setup evidence exists, show the real target and explain
 the implementation boundary; do not portray setup checks as an agent repair.
+
+## Notes for later
+
+Decided September 27: a dependency upgrade is an acceptable agent fix if the
+agent first shows the rebound in captured frames, explains it, and its
+after-takes show it gone. The agent may upgrade React too; keep the pinned
+starting state, because the defect was verified only with it. Checked from the
+computer the same day: the npm registry is reachable; the latest
+`@radix-ui/react-accordion` is 1.2.20, and its peer range excludes the pinned
+`18.0.0-rc.0`. The demo's `legacy-peer-deps=true` makes install warn rather
+than fail. Unverified: whether 1.2.20 removes the rebound. Never give the
+agent a diagnosis or the fixing version.
