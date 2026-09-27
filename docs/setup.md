@@ -1,4 +1,4 @@
-# Local setup and operation
+# Linux setup and Tailscale access
 
 Run commands from the repository root. This is a Linux x86_64 prototype, tested
 with Docker 29.7.2, Compose 5.5.0, Node 25.1.0, npm 11.6.2, Python 3, Git, curl,
@@ -16,7 +16,8 @@ npm run login
 npm run status
 ```
 
-QM is **https://localhost:8443**. `login` obtains a short-lived link through
+QM is **https://charlies-pc.tail1d1ed7.ts.net** on this deployment, accessible
+from devices on the same Tailscale network. `login` obtains a short-lived link through
 `qm admin-login`, opens it without printing it, and uses the normal confirmation
 page. The dedicated browser profile lives in ignored `.state/login-browser/`.
 Only this local certificate's public-key fingerprint is exempted from browser
@@ -30,7 +31,52 @@ computer, not a manually created look-alike container. Keep this setup to that
 scope. Agent operations exercised here required no additional approval prompts;
 QM's authentication and policy checks remain enabled.
 
+## Sign-in from your Mac
+
+Keep Tailscale connected on both devices. The Linux box runs QM and the agent
+computer; no Mac installation or SSH tunnel is needed. Sign in using the
+administrator link below first. Opening the base address while signed out can
+show **"Email delivery isn't configured"** because the email-login route has no
+mail provider. No email setup is needed for administrator sign-in.
+
+For the existing administrator sign-in, run this in the **T3 Code terminal on
+Linux**, starting at the repository root:
+
+```bash
+(cd deployment && ./node_modules/.bin/qm admin-login)
+```
+
+Open the generated link in your Mac browser within five minutes and confirm
+your email. The link is private and single-use; never paste it into chat or
+commit it. This uses the supported QM login command, with the same credentials
+and confirmation flow. `npm run login` opens the browser on Linux, so it is only
+useful when you can see that desktop. Existing cookies for `localhost` do not
+sign you into the new hostname. After confirmation, bookmark
+**https://charlies-pc.tail1d1ed7.ts.net** for subsequent visits in that browser.
+
+Tailscale Serve terminates HTTPS and proxies to the existing portal at
+`http://127.0.0.1:8081`. Serve is private to the tailnet; Funnel is not enabled.
+The one-time account Serve/HTTPS setup and this command configure the route:
+
+```bash
+sudo tailscale serve --bg --https=443 http://127.0.0.1:8081
+tailscale serve status
+```
+
+The background route survives closing terminals and restarting Tailscale.
+`npm stop` still stops QM; the retained Serve route then has no running backend.
+To remove only this route, run `sudo tailscale serve --https=443 off`.
+See [Tailscale Serve](https://tailscale.com/docs/features/tailscale-serve).
+The deployment's `publicUrl` controls the login origin; startup and smoke
+helpers read that address. GBrain's Docker-local address is unchanged.
+
 ## Fresh checkout
+
+For a **different Linux machine**, first set `publicUrl` in
+`deployment/qm.config.jsonc` to its own address. Use `https://localhost:8443` for
+access on that machine's desktop, or its Tailscale HTTPS hostname with Serve
+configured as above. Do not leave it pointing to this deployment's hostname.
+macOS hosts are not supported by these scripts; a Mac can be the browser client.
 
 ```bash
 npm run bootstrap
@@ -79,7 +125,9 @@ configuration validator, but email login is disabled without transport
 credentials. The verified path is administrator login. No Slack credentials,
 remote browser account, embedding key, or Anthropic key is needed.
 
-TLS publishes loopback ports 8443 (QM) and 3443 (GBrain). The current QM CLI
+Tailscale Serve exposes QM on tailnet HTTPS port 443. Caddy retains loopback
+ports 8443 (QM) and 3443 (GBrain), but use the configured Tailscale hostname for
+QM sign-in. The current QM CLI
 also publishes 8080 core, 8081 portal/auth, and 8082 web/admin on all host
 interfaces; keep those ports free. Application auth/signatures still apply.
 PostgreSQL is not published. The computer connects to

@@ -1,7 +1,8 @@
 import { chromium, request } from 'playwright';
 import { execFileSync } from 'node:child_process';
-import { chmodSync, mkdirSync, writeFileSync, existsSync } from 'node:fs';
-export const origin = 'https://localhost:8443';
+import { chmodSync, mkdirSync, writeFileSync, existsSync, readFileSync } from 'node:fs';
+export const origin = new URL(JSON.parse(readFileSync(
+  new URL('../deployment/qm.config.jsonc', import.meta.url), 'utf8')).publicUrl).origin;
 export async function login() {
   mkdirSync('.state', { recursive: true, mode: 0o700 });
   const link = execFileSync('./node_modules/.bin/qm', ['admin-login'], { cwd: 'deployment', encoding: 'utf8' }).trim();

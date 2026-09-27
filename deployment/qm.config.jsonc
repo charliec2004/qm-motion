@@ -1,7 +1,7 @@
 {
   "contract": 1,
   "orgId": "qm-motion",
-  "publicUrl": "https://localhost:8443",
+  "publicUrl": "https://charlies-pc.tail1d1ed7.ts.net",
   "target": "docker",
   "basePort": 8080,
   "botName": "QM Motion",

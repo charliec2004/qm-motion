@@ -6,4 +6,4 @@ qm check
 qm up --build-from runtime
 node scripts/enable-model.mjs
 python3 scripts/computer.py --connect
-echo 'QM: https://localhost:8443 — npm run login opens administrator sign-in.'
+python3 -c 'import json; print("QM: " + json.load(open("deployment/qm.config.jsonc"))["publicUrl"] + " — npm run login opens administrator sign-in on this Linux box.")'

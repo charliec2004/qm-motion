@@ -5,7 +5,7 @@ interaction, fix the application, and verify the result over time. GBrain keeps
 concise evidence-backed cases. The kickoff environment works; the motion
 extension is the next implementation task.
 
-## Run locally
+## Run on Linux; access over Tailscale
 
 Verified on Linux x86_64 with Docker + Compose, Node 25 (24+ required), npm,
 Python 3, Git, curl, OpenSSL, and host Chromium at `/usr/bin/chromium`.
@@ -15,15 +15,20 @@ are configured in ignored files; subscription logins are not API credentials.
 ```bash
 # On this already bootstrapped machine:
 npm start
-npm run login
+# Generate the sign-in link here; open it in your Mac browser:
+(cd deployment && ./node_modules/.bin/qm admin-login)
 ```
 
-QM opens at **https://localhost:8443**. Login uses QM's supported administrator
-flow and a dedicated browser profile with trust for this project's certificate.
-Do not copy the temporary sign-in link into documentation or chat.
+On this deployment, open **https://charlies-pc.tail1d1ed7.ts.net** from a device
+on the same Tailscale network. Linux runs the services; a Mac can use the web UI
+without a local install or SSH tunnel. See [sign-in from your Mac](docs/setup.md#sign-in-from-your-mac)
+for QM's existing administrator login. `npm run login` still opens Chromium
+on the Linux box. Do not copy temporary sign-in links into documentation or chat.
 
-On a fresh checkout, run `npm run bootstrap`, populate `OPENAI_API_KEY` in the
-generated, ignored `deployment/.env`, then run the commands above. Bootstrap
+On a fresh Linux machine, first set `publicUrl` in `deployment/qm.config.jsonc`
+to that machine's address (`https://localhost:8443` for desktop-local access).
+Run `npm run bootstrap`, populate `OPENAI_API_KEY` in the generated, ignored
+`deployment/.env`, then run the commands above. Bootstrap
 downloads/builds pinned dependencies and generates local secrets. See
 [setup](docs/setup.md) before moving an existing deployment to another machine.
 

@@ -8,7 +8,7 @@ machine. The motion product is intentionally not implemented by this kickoff.
 
 - Private repository created and visibility verified:
   [charliec2004/qm-motion](https://github.com/charliec2004/qm-motion).
-- QM CLI 0.1.12, authenticated web/admin at `https://localhost:8443`, **pi /
+- QM CLI 0.1.12, web/admin address `https://charlies-pc.tail1d1ed7.ts.net`, **pi /
   OpenAI GPT-6 Sol**. The user-supplied API key is in ignored `deployment/.env`.
   The demo scope defaults to low effort through the supported runtime API.
 - Actual local Docker computer with durable `/root` volume, Chromium
@@ -26,6 +26,18 @@ machine. The motion product is intentionally not implemented by this kickoff.
 
 Evidence stays in ignored `artifacts/`; none of the private transcripts, images,
 recordings, database contents, or credential files belongs in Git.
+
+Tailscale access added after kickoff: Serve privately proxies HTTPS
+`charlies-pc.tail1d1ed7.ts.net:443` to portal port 8081, with no Funnel route.
+Startup applied the new public origin and signed in through the existing
+administrator flow. Strict browser certificate validation, authenticated API
+HTTP 200, and the visible composer passed (`artifacts/smoke/tailscale-access.json`).
+The real web UI sent a GPT-6 Sol turn, rendered its reply, and independently
+verified the file it wrote in the QM computer (`artifacts/smoke/tailscale-ui.log`).
+The login script and credentials are unchanged. On a Mac, generate the usual
+`qm admin-login` link in the Linux terminal and open it in the Mac browser;
+opening the base address while signed out reaches the unconfigured email route.
+See [setup.md](docs/setup.md#sign-in-from-your-mac).
 
 | Check | Result and local evidence |
 | --- | --- |
@@ -71,7 +83,8 @@ Prove a real QM turn sees intermediate frames, then follow
 case persistence, and rehearsal. There is no completed before/after repair or
 measured full 90-second product demo yet.
 
-Start with `npm start` and `npm run login`; use `npm run demo` for the target.
+Start with `npm start` and [administrator sign-in](docs/setup.md#sign-in-from-your-mac);
+`npm run login` is for the Linux desktop. Use `npm run demo` for the target.
 Read [demo.md](docs/demo.md#hand-the-server-to-qm) before handing the dev server
 from operator control to QM's `background` tool. Stop retains containers/data;
 only explicit demo reset creates a fresh target copy.

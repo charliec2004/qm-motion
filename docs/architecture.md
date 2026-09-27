@@ -28,7 +28,7 @@ flowchart LR
 | Execution and rendering | Explicit `sandbox.backend: local`; custom sandbox image contains QM's execution daemon, stock Debian Chromium, FFmpeg, agent-browser 0.38.1, Playwright 1.63.0 |
 | Capture/inspection/comparison and evidence delivery | Our future TypeScript extension; agent-browser capture plus minimal FFmpeg analysis |
 | Durable case records | Separate GBrain 0.59.0.0 server and dedicated PostgreSQL service |
-| Local HTTPS | Caddy exposes QM at `https://localhost:8443` and GBrain at `https://gbrain.qm.internal:3443` |
+| HTTPS access | Tailscale Serve exposes QM privately at `https://charlies-pc.tail1d1ed7.ts.net`, proxying to portal port 8081. Caddy retains loopback QM port 8443 and Docker-local GBrain at `https://gbrain.qm.internal:3443`. |
 
 `deployment/` is the CLI-managed deployment directory. `.upstream/qm/` is a
 pinned reference checkout, not the running core. `deployment/runtime/` is an
