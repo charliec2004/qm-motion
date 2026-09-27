@@ -1,0 +1,136 @@
+diff --git a/src/harness/agent-tools.ts b/src/harness/agent-tools.ts
+--- a/src/harness/agent-tools.ts
++++ b/src/harness/agent-tools.ts
+@@ -2,7 +2,8 @@
+ import { createKeyedQueue } from "../util/async.ts";
+ import { createGrindMeter, grindState } from "./grind.ts";
+ import type { RuntimeHandoff, RuntimeRequest } from "./runtime-types.ts";
+-import { defineTool, type ToolDefinition } from "@earendil-works/pi-coding-agent";
++import { defineTool, formatDimensionNote, resizeImage, type ToolDefinition } from "@earendil-works/pi-coding-agent";
++import { createHash } from "node:crypto";
+ import { Type, type TSchema } from "typebox";
+ import { Check, Clone } from "typebox/value";
+ import { CONFIG_DEFAULTS, type Config } from "../config.ts";
+@@ -103,6 +104,15 @@
+   return { content: [{ type: "text" as const, text: s }], details: {} };
+ }
+ 
++const MOTION_VIEW_TYPES: Record<string, string> = {
++  png: "image/png",
++  jpg: "image/jpeg",
++  jpeg: "image/jpeg",
++  webp: "image/webp",
++  gif: "image/gif",
++};
++const MOTION_VIEW_MAX_BYTES = 50 * 1024 * 1024;
++
+ function isPolicyNotice(summary: Record<string, unknown>): boolean {
+   return summary.blocked !== undefined || summary.denied !== undefined;
+ }
+@@ -3844,10 +3854,82 @@
+     },
+   });
+ 
++  const motionView = defineTool({
++    name: "motion_view",
++    label: "motion_view",
++    description:
++      "View an image file from your computer (PNG, JPEG, WebP or GIF) as an actual image you can see; a file path or `read` gives you no pixels. Normally pass a `sheets[].path` value printed by motion inspect or motion compare, after reading that command's table. `path` is relative to /root/workspace; an absolute /root/workspace/… path also works. Large images are shrunk automatically, and the result says how coordinates map back. The image is visible only for the rest of this turn; call again in later turns. Never describe an image you have not viewed with this tool.",
++    parameters: Type.Object({
++      path: Type.String({
++        description:
++          "Image path under /root/workspace, for example a `sheets[].path` value printed by motion inspect or compare.",
++      }),
++    }),
++    async execute(callId, params) {
++      const tc = ref.current;
++      if (!tc) return text("[error] no active tool context");
++      await recordCall(callId, { tool: "motion_view", path: params.path });
++      const signal = ref.abortSignal;
++      signal?.throwIfAborted();
++      const given = params.path.trim();
++      const fail = (error: string) =>
++        recordResult(callId, { tool: "motion_view", path: given, error }, text(`[motion_view error] ${error}`), true);
++      const path = given.startsWith("/root/workspace/") ? given.slice("/root/workspace/".length) : given;
++      const mimeType = MOTION_VIEW_TYPES[path.slice(path.lastIndexOf(".") + 1).toLowerCase()];
++      if (!mimeType || !path || path.startsWith("/") || path.split(/[\\/]/).includes(".."))
++        return fail(`path must be an image under /root/workspace (got ${given})`);
++      if (!tc.readBytes) return fail("this QM core cannot read file bytes");
++      let bytes: Uint8Array | null;
++      try {
++        bytes = await tc.readBytes(path, signal);
++      } catch (e) {
++        signal?.throwIfAborted();
++        return fail(`could not transfer ${path} (${errMessage(e)}); the limit for transfer is 50 MB, so crop it first`);
++      }
++      signal?.throwIfAborted();
++      if (bytes === null)
++        return fail(
++          `not found: ${path} (paths are relative to /root/workspace; copy a "sheets[].path" value from motion inspect)`,
++        );
++      if (bytes.length > MOTION_VIEW_MAX_BYTES)
++        return fail(
++          `file is ${(bytes.length / 1024 / 1024).toFixed(1)} MB; the limit for transfer is 50 MB, so crop it first`,
++        );
++      const image = await resizeImage(bytes, mimeType).catch(() => null);
++      signal?.throwIfAborted();
++      if (!image) return fail(`could not decode or shrink ${path} (not a valid image?)`);
++      const sha256 = createHash("sha256").update(bytes).digest("hex");
++      const note = image.wasResized ? formatDimensionNote(image) : undefined;
++      return recordResult(
++        callId,
++        {
++          tool: "motion_view",
++          path,
++          bytes: bytes.length,
++          sha256,
++          width: image.width,
++          height: image.height,
++          resized: image.wasResized,
++        },
++        {
++          content: [
++            {
++              type: "text" as const,
++              text: `motion_view ${path} ${image.width}x${image.height} ${image.mimeType} sha256=${sha256}${note ? ` ${note}` : ""}`,
++            },
++            { type: "image" as const, data: image.data, mimeType: image.mimeType },
++          ],
++          details: {},
++        },
++      );
++    },
++  });
++
+   const tools = [
+     ...(!opts?.sandboxResources ? [execute] : []),
+     ...(credentialExecServices.length ? [credentialExec] : []),
+     read,
++    motionView,
+     write,
+     publish,
+     memory,
+diff --git a/src/tools/primitives.ts b/src/tools/primitives.ts
+--- a/src/tools/primitives.ts
++++ b/src/tools/primitives.ts
+@@ -216,6 +216,7 @@
+   restartComputer(sandboxId?: string): Promise<void>;
+   migrateComputer(to: string): Promise<{ from: string; to: string }>;
+   read(path: string, signal?: AbortSignal): Promise<ReadResult>;
++  readBytes?(path: string, signal?: AbortSignal): Promise<Uint8Array | null>;
+   write(path: string, data?: string, share?: ShareDirective[]): Promise<WriteResult>;
+   publish(input: PublishInput): Promise<PublishResult>;
+   createPlayground(input: { title: string; html: string }): Promise<PlaygroundArtifact>;
+@@ -873,6 +874,12 @@
+       });
+     },
+ 
++    async readBytes(path: string, signal?: AbortSignal): Promise<Uint8Array | null> {
++      signal?.throwIfAborted();
++      const handle = await deps.provision();
++      return withAbort(() => deps.sandbox.readFileBytes(handle, path), signal);
++    },
++
+     async createPlayground(input: { title: string; html: string }): Promise<PlaygroundArtifact> {
+       if (!deps.files || !writableScopeId) throw new Error("playgrounds require a writable artifact store");
+       return once(() =>

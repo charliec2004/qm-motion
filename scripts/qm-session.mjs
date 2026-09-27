@@ -34,7 +34,7 @@ export async function client() {
     throw new Error(String(error.message).split('Call log:')[0]);
   }
 }
-export async function turn(api, text, options = {}) {
+export async function turn(api, text, options = {}, { timeoutMs = 240000 } = {}) {
   const started = Date.now();
   const response = await api.post('/api/turn', { data: { text, model: 'gpt-6-sol', harness: 'pi',
     timezone: 'America/Los_Angeles', ...options } });
@@ -42,7 +42,7 @@ export async function turn(api, text, options = {}) {
   const launch = await response.json();
   if (!launch.runId) throw new Error('QM did not return a run ID');
   console.log('QM run started:', launch.runId);
-  const deadline = Date.now() + 240000;
+  const deadline = Date.now() + timeoutMs;
   while (Date.now() < deadline) {
     await new Promise(resolve => setTimeout(resolve, 2000));
     const run = await (await api.get(`/api/runs/${launch.runId}`)).json();
@@ -57,5 +57,5 @@ export async function turn(api, text, options = {}) {
   mkdirSync('artifacts/smoke', { recursive: true });
   writeFileSync(`artifacts/smoke/run-${launch.runId}-timeout.json`, JSON.stringify(last, null, 2));
   const stop = await api.post(`/api/runs/${launch.runId}/signal`, { data: { kind: 'abort' } });
-  throw new Error(`Run ${launch.runId} exceeded 240s; saved its state and requested abort (HTTP ${stop.status()}). Inspect before retrying.`);
+  throw new Error(`Run ${launch.runId} exceeded ${timeoutMs / 1000}s; saved its state and requested abort (HTTP ${stop.status()}). Inspect before retrying.`);
 }

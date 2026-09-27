@@ -17,6 +17,15 @@ machine. The motion product is intentionally not implemented by this kickoff.
 - **Git:** `main` is the only branch.
 - **Start:** [plan.md](docs/plan.md) milestone 1.
 
+## Build log (hackathon, September 27)
+
+- **M1 passed, 1:47 PM.** `motion_view` patch deployed with `npm start`
+  (found in `/app/src`); `qm-turn.mjs` has `--thread` (required) and
+  `--timeout`. Real turn (thread `mv-1790541947`, run `eea0d7e6…`) called
+  `motion_view` once and replied with the withheld code exactly; its text
+  result held only path, size and SHA-256. `artifacts/motion/m1-result.json`,
+  `artifacts/smoke/run-eea0d7e6-f6b1-4a77-b878-3a834d3b011c.json`.
+
 ## Working foundation
 
 - Private repository created and visibility verified:
