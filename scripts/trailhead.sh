@@ -4,6 +4,10 @@ TASK_ROOT=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
 cd "$TASK_ROOT"
 action=${1:-status}
 case "$action" in install|status|scan) ;; *) echo 'Usage: npm run trailhead -- [install|status|scan]' >&2; exit 2 ;; esac
+if [[ ! -d node_modules/playwright || ! -f deployment/.env ]]; then
+  echo "Run this from the primary checkout (it needs node_modules and deployment/.env); $TASK_ROOT has neither." >&2
+  exit 2
+fi
 
 # The Trailhead storefront is an agent-facing repository: the agent starts its
 # dev server itself (QM background tool) and writes the FAQ page. install primes
