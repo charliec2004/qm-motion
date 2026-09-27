@@ -7,14 +7,16 @@ case "$action" in install|status|scan) ;; *) echo 'Usage: npm run trailhead -- [
 
 # The Trailhead storefront is an agent-facing repository: the agent starts its
 # dev server itself (QM background tool) and writes the FAQ page. install primes
-# a clean rehearsal: every earlier run's files leave the agent computer for an
-# ignored host archive, a fresh copy is installed, and a leak scan must pass.
+# a clean rehearsal: QM's per-user memory is reset and old sessions archived,
+# every earlier run's files leave the agent computer for an ignored host
+# archive, a fresh copy is installed, and a leak scan must pass.
 
 # Words that only earlier investigations would leave behind.
 LEAK_PATTERN='rebound|reopen|grid-template-rows|radix-accordion-content-height|slideUp|accordion-up|trailhead-faq|field notes|flicker'
 
 scan() {
-  python3 scripts/computer.py bash -s -- "$LEAK_PATTERN" <<'REMOTE'
+  local status=0
+  python3 scripts/computer.py bash -s -- "$LEAK_PATTERN" <<'REMOTE' || status=1
 pattern=$1
 hits=$(grep -rIl -i -E "$pattern" /root /tmp --exclude-dir=node_modules --exclude-dir=_cacache \
   --exclude-dir=agent-creds 2>/dev/null | grep -v -E '^/root/workspace/(motion|trailhead-storefront)/|^/root/workspace/apis\.json$' || true)
@@ -24,6 +26,8 @@ if [[ -n "$hits" ]]; then echo "Leak scan: files mention earlier runs:"; echo "$
 if [[ "$pages" != *'No pages found'* ]]; then echo "GBrain is not empty (back up and soft-delete before a clean run):"; echo "$pages"; status=1; else echo 'GBrain: no pages.'; fi
 exit $status
 REMOTE
+  node scripts/prime-qm.mjs --check || status=1
+  return $status
 }
 
 if [[ "$action" == status ]]; then
@@ -34,7 +38,7 @@ curl -s -o /dev/null -w 'localhost:5173 HTTP %{http_code}\n' http://localhost:51
 REMOTE
   exit 0
 fi
-if [[ "$action" == scan ]]; then scan; exit $?; fi
+if [[ "$action" == scan ]]; then scan && exit 0 || exit 1; fi
 
 # 1. Everything an earlier run could leave, except QM's own workspace files, the
 #    motion CLI, environment-smoke evidence and live background jobs.
@@ -58,9 +62,10 @@ for p in /tmp/* /tmp/.[!.]*; do
 done
 REMOTE
 )
+out="artifacts/rehearsal-archive/$(date -u +%Y%m%dT%H%M%SZ)"
+mkdir -p "$out"
+node scripts/prime-qm.mjs "$out"
 if [[ -n "$list" ]]; then
-  out="artifacts/rehearsal-archive/$(date -u +%Y%m%dT%H%M%SZ)"
-  mkdir -p "$out"
   printf '%s\n' "$list" > "$out/paths.txt"
   cid=$(python3 scripts/computer.py --name)
   docker exec -i "$cid" tar -C / -czf - -T - < "$out/paths.txt" > "$out/archive.tgz"
