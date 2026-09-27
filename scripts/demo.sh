@@ -90,6 +90,10 @@ if [[ "$new_copy" == true ]]; then
   git add .
   git -c user.name='QM Motion demo' -c user.email='qm-motion@localhost' commit --quiet -m 'Field Notes baseline'
   ln -sfn "$destination" /root/workspace/qm-motion-demo/current
+  # Earlier runs may hold a previous fix; retain them outside the agent's workspace.
+  mkdir -p /root/qm-motion-demo-archive
+  find /root/workspace/qm-motion-demo/runs -mindepth 1 -maxdepth 1 ! -path "$destination" \
+    -exec mv -t /root/qm-motion-demo-archive/ {} +
 fi
 nohup node "$destination/server.mjs" >server.log 2>&1 </dev/null &
 echo $! >server.pid

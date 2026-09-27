@@ -47,11 +47,11 @@ option. Every command prints one JSON object with a `next` hint.
 
 ## Case record (last step)
 
-Write one case after the investigation:
-`gbrain put cases/motion-<first-before-take-id> --content '<markdown>'` with the
+Write one case after the investigation. GBrain lowercases slugs, so lowercase
+the take ID: `gbrain put cases/motion-<first-before-take-id, lowercased> --content '<markdown>'` with the
 request, scenario name, app revision before and after, take IDs, observed
 intervals (ms from trigger), diagnosis, change made, per-take before/after
 result, sheet paths, and a unique token. Verify with
-`gbrain get cases/motion-<first-before-take-id>` and `gbrain search '<token>'`.
+`gbrain get` on that same lowercase slug and `gbrain search '<token>'`.
 Write only under `cases/`. If GBrain fails, say so plainly in the reply; it
 never stops capture, inspection or the report.

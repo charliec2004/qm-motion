@@ -68,7 +68,8 @@ can affect rendering; no smoothness claim follows from nominal FPS. The full
 `npm run demo` reuses a running operator server or restarts it in the same
 `current` copy, preserving source edits and installed dependencies. Only first
 use and `npm run demo -- reset` create a **new** pristine copy; reset retains
-every previous run and its edits. `npm run demo -- stop` stops the known operator
+every previous run and its edits in `/root/qm-motion-demo-archive/`, outside the
+agent's workspace. `npm run demo -- stop` stops the known operator
 server and retains data. Root `demo/` is the pinned baseline; application edits
 belong in the computer's `current` working copy. The server watches source
 changes. Each new copy has a local Git baseline so the agent can inspect its
