@@ -45,7 +45,10 @@ branches.
   2. the file exists;
   3. the magic bytes are PNG, JPEG or WebP and agree with the extension;
   4. the size is at most 4.5 MB;
-  5. the header dimensions are at most 2000×2000.
+  5. the header dimensions are at most 2000×2000. Read them from the file
+     header: for PNG, the IHDR width and height (big-endian, bytes 16–23);
+     for JPEG, the first SOF0 or SOF2 marker; for WebP, the VP8X, VP8 or VP8L
+     chunk.
 - **Success result:** one text block,
   `motion_view <path> <w>x<h> <bytes> bytes sha256=<hex>`, followed by one
   `{type:"image", data:<base64>, mimeType}` block.
@@ -82,6 +85,16 @@ with `gpt-6-sol` and `pi`, and saves the run to
 Verify outcomes from the saved run JSON and independent reads through
 `npm run computer`, never from the agent's words alone.
 
+**The app server during real turns.** When a turn ends, QM stops the computer
+unless the agent owns a `background` job, which kills a server started with
+`npm run demo`. So:
+
+- **Operator-only work** (milestones 2–3 development, running the CLI through
+  `npm run computer`): use `npm run demo`.
+- **Real turns that need the app:** first run `npm run demo -- stop` on the
+  host, then have the agent start the server with QM's `background` tool.
+  The exact call is in [demo.md](demo.md#hand-the-server-to-qm).
+
 ## 3. Development loop for the `motion` CLI
 
 - **Source:** `src/motion/`.
@@ -92,10 +105,19 @@ Verify outcomes from the saved run JSON and independent reads through
   `tar -C src -c motion | python3 scripts/computer.py tar -x -C /root/workspace`.
 - **Run:** `node /root/workspace/motion/cli.mjs <command> …`. The guidance
   skill calls it `motion` for short.
-- **Playwright:** load it with
-  `createRequire('/opt/qm-motion/package.json')('playwright')`. ES module
-  imports do not search `/opt/qm-motion/node_modules`, and `NODE_PATH` does
-  not apply to them.
+- **Playwright:** reuse the spike's proven code
+  (`artifacts/motion-spike/scripts/pw-alt.mjs`):
+  `const { chromium } = createRequire('/opt/qm-motion/package.json')('playwright')`,
+  then `chromium.launch({ executablePath: '/usr/bin/chromium', headless: true,
+  args: ['--no-sandbox'] })`, `browser.newPage({ viewport, deviceScaleFactor,
+  reducedMotion })`, and `page.context().newCDPSession(page)` for the
+  screencast. ES module imports do not search `/opt/qm-motion/node_modules`,
+  and `NODE_PATH` does not apply to them.
+- **Why not QM's tool layer:** `deployment/sandbox/tools/<id>/tool.json` can
+  declare install files, but core only installs them on remote backends. The
+  local Docker backend (`local-sandbox.ts`) ignores them; GBrain is in the
+  computer only because our Dockerfile copies it. Copy the CLI into
+  `/root/workspace` instead.
 - **FFmpeg** is on `PATH` in the computer.
 - **Output:** every command prints exactly one JSON object to stdout. On
   failure it prints `{"ok":false,"error":"…"}` and exits 1. Progress goes to
@@ -113,21 +135,24 @@ A scenario is JSON data; the CLI contains no target-specific logic.
   "viewport": { "width": 960, "height": 720 },
   "deviceScaleFactor": 1,
   "reducedMotion": "no-preference",
-  "ready": { "role": "region", "name": null, "state": "visible", "settleMs": 350 },
-  "trigger": { "action": "click", "role": "button", "name": "What comes with a Field Notes membership?" },
+  "ready": { "selector": ".faq .item:nth-child(1) .content[data-state='open']", "settleMs": 350 },
+  "trigger": { "action": "click", "role": "button", "name": "What comes with a Field Notes membership?", "exact": true },
   "watch": [
-    { "name": "first-answer", "selector": "<CSS selector for the first answer panel>" },
-    { "name": "second-question", "selector": "<CSS selector for the next question header>" }
+    { "name": "first-answer", "selector": ".faq .item:nth-child(1) .content", "attributes": ["data-state"] },
+    { "name": "second-question", "selector": ".faq .item:nth-child(2) .header" }
   ],
   "recordBeforeMs": 300,
   "recordAfterMs": 800
 }
 ```
 
-The `ready` locator must match the first answer panel being open, and `watch`
-lists the elements to trace (1–5, each a name and a CSS selector). Confirm the
-exact locators and selectors against the real page when writing milestone 2;
-the values above are placeholders. `watch` names *where to look*, not what is
+Locators come from `demo/src/main.jsx`. Every question is a Radix item with
+the classes `.item`, `.header`, `.trigger` and `.content`, and the first
+answer starts open (`defaultValue="question-0"`). `ready` is a CSS selector
+that must be visible. `trigger` uses Playwright's `getByRole`; the `+` symbol
+is `aria-hidden`, so the accessible name is exactly the question text, as the
+spike used. `watch` lists 1–5 elements, each with a name, a CSS selector and
+optional extra `attributes` to record. It names *where to look*, not what is
 wrong. `appDir` provides the app revision.
 
 ## 5. `motion capture`
@@ -151,8 +176,8 @@ source is *not* reset between takes; that is the agent's choice.
 5. Install the **trace sampler**: a `requestAnimationFrame` loop that, every
    frame, records the rAF timestamp and, for each watched element,
    `getBoundingClientRect()` (x, y, width, height), computed `opacity`,
-   `display` and `visibility`, the `hidden` attribute, and whether it is
-   still in the document. Animations are updated before rAF callbacks, so
+   `display` and `visibility`, the `hidden` attribute, any listed extra
+   `attributes`, and whether it is still in the document. Animations are updated before rAF callbacks, so
    each sample is the state about to be painted in that frame. This is
    instrumentation: reading layout every frame has a cost. In the spike, the
    same kind of sampler did not stop the defect reproducing.
@@ -173,7 +198,7 @@ source is *not* reset between takes; that is the agent's choice.
   `chromeTimestampS*1000 − triggerWallMs`, rounded to 0.1.
 - `trace.json`: an array of samples
   `{ "msFromTrigger", "elements": { "<name>": { "x", "y", "width", "height",
-  "opacity", "display", "visibility", "hidden", "connected" } } }`, where
+  "opacity", "display", "visibility", "hidden", "connected", "attributes" } } }`, where
   `msFromTrigger = rafTimestamp − trigger event.timeStamp` (same page clock,
   so exact to the frame). A watched element that is missing is recorded as
   `null`.
@@ -217,9 +242,15 @@ scale 1).
   more than 24, it skips the sheet and says "window has N frames; narrow it or
   crop"; the table is still returned. It fails if `from ≥ to` or the crop is
   out of bounds.
-- **Layout:** crops each frame, then scales every tile to the same size so
-  the sheet is at most 1600 px wide, with 4–6 columns. Each tile is
-  labelled `+264.3 ms`, plus `#frame-index`.
+- **Layout (Decision):** 4 columns and tiles 400 px wide, with height from
+  the crop's aspect ratio. So 24 frames make 6 rows, with a 4 px white gap.
+  Each tile is labelled `+264.3 ms #12` in its top-left corner.
+- **FFmpeg recipe** (verified in the computer on September 27):
+  1. For each frame:
+     `ffmpeg -i <frame>.jpg -vf "crop=w:h:x:y,scale=400:-2,drawtext=fontfile=/usr/share/fonts/truetype/liberation/LiberationSans-Regular.ttf:text='<label>':fontsize=22:fontcolor=white:box=1:boxcolor=black@0.7:x=6:y=6" tile_NNN.png`.
+  2. Then `ffmpeg -framerate 1 -i tile_%03d.png -vf "tile=4xR:padding=4:color=white" -frames:v 1 sheet.png`.
+
+  Labels contain no `:` or `'`.
 - **Output:** writes `sheets/inspect_<from>_<to>[_crop].png` inside the run
   directory, targeting about 1 MB. If it is over 4.5 MB or 2000 px, it fails.
 - **stdout:** `{"ok":true,"table":"<text>","sheet":"artifacts/motion/<run>/sheets/…png" | null,"sheetSkippedReason":null | "<text>","frames":N,"width","height","bytes"}`.
@@ -238,8 +269,11 @@ scale 1).
   frame of that take in the window, left to right, with its own label.
   Columns are not forced to line up, because takes deliver frames at
   different times and forcing a grid would drop or repeat frames.
-- **Size:** fails if any row has more than 16 frames or the sheet exceeds the
-  size limits. The same crop applies to all rows.
+- **Size (Decision):** tiles are 240 px wide, with at most 8 frames per row
+  and 8 rows (for example 4 before and 4 after), so the sheet stays under 2000
+  px. It fails if a row would have more than 8 frames ("narrow the window"),
+  or if the sheet exceeds the size limits. The same crop applies to all rows,
+  and each row starts with a label tile such as `before 1`.
 - **Tables:** prints the section 6 table for every take, labelled like the
   sheet rows, so values can be compared take by take.
 - **Output:** writes `artifacts/motion/compare-<UTC>-<4 hex>/sheet.png` and a
@@ -276,6 +310,13 @@ Rewrite it when the CLI exists. It must say, briefly:
    stops the investigation.
 
 It must not mention Field Notes' cause or any fix.
+
+**Deploying it (verified from the CLI and database, September 27):**
+`npm start` runs `qm up`, which sends `deployment/sandbox/skills/` to core
+with `PUT /v1/deployment-layer`. It is stored in the `deployment_layer` table
+(currently version 4, written by "source-authenticated deployment CLI"), and
+core applies it within 30 seconds, without a restart. Confirm with a real turn
+that reads `skill://motion-workflow/SKILL.md` and quotes a new line.
 
 ## 9. GBrain case
 

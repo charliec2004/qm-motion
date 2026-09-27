@@ -51,7 +51,7 @@ Three pieces. Everything else already exists.
 | --- | --- | --- | --- |
 | `motion` CLI | `capture`, `inspect` and `compare` commands, run with `execute` | `src/motion/`, Node ES modules using the computer's Playwright 1.63.0 and FFmpeg | During development, copy it into `/root/workspace`. Once stable, bake it into the sandbox image ([rebuild caveat](#sandbox-image-changes)). |
 | `motion_view` tool | Returns one evidence image to the model as an image block | `deployment/runtime/patches/motion-evidence-image.patch` against QM core | `npm start` rebuilds and deploys core |
-| Agent guidance | Tells QM's agent the commands and evidence rules | `deployment/sandbox/skills/motion-workflow/SKILL.md` | Imported into QM's skill catalog by the deployment layer ([setup.md](setup.md)); confirm with a real `skill://` read |
+| Agent guidance | Tells QM's agent the commands and evidence rules | `deployment/sandbox/skills/motion-workflow/SKILL.md` | `npm start` uploads it to core (`PUT /v1/deployment-layer`); applied within 30 s ([spec §8](spec.md#8-agent-guidance-deploymentsandboxskillsmotion-workflowskillmd)) |
 
 **CLI interface (proposed).** Exact flags, file formats and errors are in
 [spec.md](spec.md).

@@ -91,7 +91,10 @@ Pre-build investigation, September 27, 9:20–10:55 AM PT:
   web chat shows attached PNG/JPEG/WebP inline; video gets a download card.
   `threadRef` names continue conversations, and the default is one shared
   thread. After a sandbox image rebuild: `npm stop && npm start`, one agent
-  command, then `computer.py --connect` for GBrain.
+  command, then `computer.py --connect` for GBrain. Skills deploy with
+  `npm start` (`PUT /v1/deployment-layer`, applied within 30 s). The spec's
+  Field Notes locators were validated on the live page in the computer, and
+  FFmpeg label/tile commands were tested there.
 - **Capture spike** (measured in the QM computer). The one-frame rebound was
   caught in 7 of 7 raw CDP screencast runs, 13 of 14 agent-browser runs at
   60fps, and 2 of 3 at 30fps. Recording did not suppress it, and slow motion
