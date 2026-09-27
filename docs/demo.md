@@ -170,23 +170,27 @@ workspace rebounded in 3/3 takes (probe deleted).
 
 Each prompt goes in the same new web session:
 
-1. *Build.* "Picking up a ticket from our PM: add an FAQ page to the Trailhead
-   storefront. Follow our existing packages and conventions. Five questions
-   (shipping, returns, sizing, warranty, gift cards), first one open by
-   default, one open at a time, and they should animate open and closed
-   smoothly. Link it from the footer, keep the dev server running, and commit
-   when done. Just get it standing up, no motion recordings yet, I'll review
-   it with you next."
-2. *Review.* "Nice. Before I send this to the PM, can you do a proper code
+1. *Build.* "Hey, picking up a ticket from our PM: we need an FAQ page on the
+   Trailhead storefront. We're still on the old design system until the
+   platform team migrates everything next quarter, so stick to the approved
+   packages and versions in CONTRIBUTING.md, no new libraries and no upgrades.
+   Five questions (shipping, returns, sizing, warranty, gift cards), first one
+   open by default, only one open at a time, and they should animate open and
+   closed smoothly. Link it from the footer. Keep the dev server running so I
+   can look at it, and commit when you're done. Don't run any motion
+   recordings yet, I want to do a code review pass with you first. Just get it
+   standing up."
+2. *Review.* "Nice. Before this goes to the PM, can you do a proper code
    review? Correctness, accessibility, and whether the accordion animation is
-   implemented right. Just read through the code and check the page loads. Let
-   me know if you think it's good to ship. Do not use motion recordings."
-3. *Motion check.* "OK, now the motion check. Last release we got burned by a
-   visual bug that passed code review, so record the accordion closing and
+   implemented properly. Copy is placeholder, so don't worry about wording.
+   Just read through the code and make sure the page loads; still no motion
+   recordings for this pass. Is it good to ship?"
+3. *Motion check.* "OK, now you can use the motion tool. Last release a
+   visual bug slipped past code review, so record the accordion closing and
    check it frame by frame. Take a few recordings of closing the first
    question. If anything's off, figure out why and fix it. If it turns out to
-   be the library, upgrading is fine, I'll clear it with the platform team.
-   Keep the animation and keyboard support, and show me before/after."
+   be the library, an upgrade is fine, I'll clear it with the platform team.
+   Keep the animation and keyboard support, and show me before and after."
 
 After prompt 1, confirm the agent used the accordion with a keyframe close and
 that host probe takes (run outside the workspace, then deleted) rebound before
