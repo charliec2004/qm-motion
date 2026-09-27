@@ -136,32 +136,35 @@ the implementation boundary; do not portray setup checks as an agent repair.
 
 ## Agent-built target: Trailhead
 
-A second demo shape, rehearsed once on September 27 (see PROGRESS.md). The
-agent writes the app itself on the same pinned library, so the defect comes
-from the real library plus the agent's own CSS; nobody inserts it. Disclose the
-pinned versions and the `createRoot` requirement as setup: the rebound needs a
-concurrent root and did not appear with `ReactDOM.render` (0/3 vs 3/3 takes).
+The agent adds an FAQ page to an existing storefront repository, so the
+defect comes from the real library plus the agent's own CSS; nobody inserts
+it. [targets/trailhead](../targets/trailhead) is our original fixture: home
+and product pages, `createRoot` in `src/main.jsx`, pinned React
+`18.0.0-rc.0`, and a `CONTRIBUTING.md` whose approved Radix table lists
+`@radix-ui/react-accordion@0.1.5`. It contains no accordion and no animated
+Radix component. Disclose the pinned versions and `createRoot` as setup: the
+rebound needs a concurrent root and did not appear with `ReactDOM.render`
+(0/3 vs 3/3 takes on September 27).
 
-Before the build: move every earlier investigation out of `/root/workspace`
-(demo copies, takes, case notes) and back up then soft-delete GBrain `cases/`.
-After the build, confirm `createRoot` and a rebound in host probe takes run
-outside the workspace, then delete the probes before prompt 2.
+**Prepare.** `npm run trailhead -- install` moves every earlier demo copy and
+motion take from `/root/workspace` to `/root/demo-archive/<time>/`, installs a
+fresh copy at `/root/workspace/trailhead-storefront` with one Git commit, and
+stops earlier Vite servers. It does not touch GBrain: back up and soft-delete
+earlier `cases/` separately. Verified September 27: pages, routing, tabs
+keyboard navigation and `createRoot` work; an ordinary keyframe accordion
+added to a copy outside the workspace rebounded in 3/3 takes (probe deleted).
 
 Each prompt goes in the same new web session:
 
-1. *Build.* "Hey, picking up a ticket from our PM. We need an FAQ page for
-   Trailhead (we sell hiking gear). Spec says it has to match the rest of our
-   storefront, which is still on the old design system, so the versions are
-   locked: @radix-ui/react-accordion@0.1.5, react@18.0.0-rc.0,
-   react-dom@18.0.0-rc.0. Please don't upgrade them, the platform team is
-   migrating everything together next quarter. The storefront already mounts
-   with React 18's createRoot (that's the whole reason we're on the RC), so do
-   the same here. Put it in /root/workspace/trailhead-faq. About five questions
+1. *Build.* "Picking up a ticket from our PM: add an FAQ page to the Trailhead
+   storefront in /root/workspace/trailhead-storefront. Follow the repo's
+   existing packages and conventions (see CONTRIBUTING.md). Five questions
    (shipping, returns, sizing, warranty, gift cards), first one open when the
    page loads, only one open at a time, and items should animate open and
-   closed smoothly. Keep the dev server running on port 5173. Just get it
-   standing up for now, no motion recordings yet, I'll do a review pass with
-   you next."
+   closed smoothly. Put it at /faq and link it from the footer. Run the dev
+   server on port 5173 and keep it running, and commit when it's done. Just
+   get it standing up for now, no motion recordings yet, I'll do a review pass
+   with you next."
 2. *Review.* "Nice. Before I send this to the PM, can you do a proper code
    review? Correctness, accessibility, and whether the accordion animation is
    implemented right. Just read through the code and check the page loads. Let
@@ -173,9 +176,12 @@ Each prompt goes in the same new web session:
    be the library, upgrading is fine, I'll clear it with the platform team.
    Keep the animation and keyboard support, and show me before/after."
 
-For the recorded run: say copy and brand are placeholders, give real link
-targets, require WCAG AA focus contrast (the rehearsal review flagged these),
-and ask for a Git repository so compare records revisions.
+After prompt 1, confirm the agent used the accordion with a keyframe close and
+that host probe takes (run outside the workspace, then deleted) rebound before
+sending prompt 2. The September 27 rehearsal used an earlier standalone
+version of prompt 1 (see PROGRESS.md): 3/3 before-takes rebounded, the agent
+rejected a `forwards` fix that snapped shut at +60 ms, and a grid-wrapper fix
+closed cleanly in 3/3 after-takes.
 
 ## Notes for later
 

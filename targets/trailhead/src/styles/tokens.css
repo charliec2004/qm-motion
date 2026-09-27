@@ -1,0 +1,24 @@
+:root {
+  --color-page: #f5f3ec;
+  --color-surface: #ffffff;
+  --color-ink: #1d2a22;
+  --color-ink-muted: #4d5a51;
+  --color-brand: #2d5a41;
+  --color-brand-ink: #ffffff;
+  --color-rule: #d8d4c7;
+  --focus-ring: #1f4d8f;
+
+  --tone-moss: #8aa27a;
+  --tone-slate: #7d8c96;
+  --tone-clay: #c08a67;
+  --tone-sand: #d9c7a1;
+
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --radius: 10px;
+  --space-1: 8px;
+  --space-2: 16px;
+  --space-3: 24px;
+  --space-4: 40px;
+  --space-5: 72px;
+  --container: 1120px;
+}

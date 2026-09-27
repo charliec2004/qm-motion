@@ -1,0 +1,15 @@
+.hero { background: var(--color-surface); border-bottom: 1px solid var(--color-rule); }
+.hero__inner { padding-block: var(--space-5); max-width: 720px; margin-inline: auto; text-align: center; }
+.hero h1 { font-size: clamp(2.2rem, 5vw, 3.6rem); }
+.hero__lede { font-size: 1.15rem; color: var(--color-ink-muted); margin-bottom: var(--space-3); }
+
+.featured { padding-top: var(--space-4); }
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: var(--space-3); list-style: none; margin: 0; padding: 0; }
+.product-card { background: var(--color-surface); border: 1px solid var(--color-rule); border-radius: var(--radius); padding: var(--space-2); }
+.product-card .swatch { aspect-ratio: 4 / 3; margin-bottom: var(--space-2); }
+.product-card h3 { font-size: 1.1rem; margin-bottom: var(--space-1); }
+.product-card h3 a { color: var(--color-ink); text-decoration: none; }
+.product-card h3 a:hover { text-decoration: underline; }
+.product-card__category { font-size: 0.85rem; color: var(--color-ink-muted); margin-bottom: 4px; }
+.product-card__summary { color: var(--color-ink-muted); font-size: 0.95rem; }
+.product-card__price { font-weight: 700; margin: 0; }

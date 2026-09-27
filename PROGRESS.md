@@ -83,6 +83,14 @@ machine. The motion product is intentionally not implemented by this kickoff.
     `/root/workspace` to `/root/m5-archive/` (including `qm-motion-demo`, so
     `npm run demo` needs it moved back); GBrain pages backed up to
     `artifacts/gbrain-backup/` and soft-deleted (restorable until Sep 28 ~2:45 PM).
+- **Trailhead storefront fixture, 3:20 PM.** `targets/trailhead` (existing
+  storefront repo; the agent adds the FAQ) and `npm run trailhead -- install`.
+  Installed at `/root/workspace/trailhead-storefront` (`1526537`); earlier copies
+  and takes archived to `/root/demo-archive/`. Pages, tabs keyboard navigation
+  and `createRoot` checked; a plain keyframe accordion in a copy outside the
+  workspace rebounded 3/3 (probe deleted). Not yet run with the agent. GBrain
+  still holds the rehearsal case; soft-delete it before a clean run. Prompts:
+  [demo.md](docs/demo.md#agent-built-target-trailhead).
 
 ## Working foundation
 
