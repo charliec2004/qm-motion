@@ -1,6 +1,6 @@
 ---
 name: motion-workflow
-description: Investigate and fix things that go wrong on screen over time in a local web app (blink, jump, flicker, flash, glitch, layout shift, animation, transition) by recording the interaction frame by frame, reading per-frame measurements, viewing frame sheets, and comparing before/after takes, then showing the user a before/after video.
+description: Investigate and fix things that go wrong on screen over time in a local web app (blink, jump, flicker, flash, glitch, layout shift, animation, transition) by recording the interaction frame by frame, reading per-frame measurements, viewing frame sheets, and comparing before/after takes, then showing the user before and after videos.
 ---
 
 Use the `motion` CLI in this computer. It is `node /root/workspace/motion/cli.mjs`;
@@ -33,9 +33,8 @@ option. Every command prints one JSON object with a `next` hint.
    `node /root/workspace/motion/cli.mjs compare --before <id,id,id> --after <id,id,id> --from <ms> --to <ms>`.
    View every compare sheet with `motion_view`. Compare reports change, not
    quality: you judge whether the requested behavior is now right. Compare
-   also makes the user's video from the first before and first after take:
-   real speed, then slow motion over `--from`/`--to`, cropped by `--crop`
-   (crop to the region that matters so it is readable).
+   also makes two plain videos for the user: the first before take and the
+   first after take, at real speed with the cursor drawn.
 
 ## Evidence rules
 
@@ -49,13 +48,14 @@ option. Every command prints one JSON object with a `next` hint.
 
 ## Reply to the user
 
-Tables and sheets are your evidence; the user gets the video. Attach the two
-`video.attach` files from your final compare (the one whose after takes hold
-the change you kept): `player.html` plays inline in chat, the MP4 downloads.
-The video has no annotations, so say in your reply where to look (for example
-"in BEFORE, watch the menu at about +120 ms"). You cannot see
-the video: describe only what the table and the sheets you viewed show. Do not
-attach sheets unless the user asks for them.
+Tables and sheets are your evidence; the user gets two videos. Attach the
+two `video.attach` files from your final compare (the one whose after takes
+hold the change you kept): `before.html` and `after.html`, which play inline
+in chat. In your reply, label them Before and After and say where to look,
+since the videos have no annotations (for example "in Before, watch the menu
+at about +120 ms after the click"). You cannot see the videos: describe only
+what the table and the sheets you viewed show. Do not attach sheets unless
+the user asks for them.
 
 ## Case record (last step)
 

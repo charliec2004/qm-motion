@@ -12,8 +12,9 @@ const HELP = `usage: ${CLI} <command> [options]
       moment). Times are ms from the trigger; negatives allowed.
   compare --before <id,id,id> --after <id,id,id> [--from <ms>] [--to <ms>] [--crop x,y,w,h]
       One table per take + sheets with one row per take (split into
-      time slices automatically). Also makes a before/after video for the
-      user (video.attach): you cannot see it; attach it, never cite it.
+      time slices automatically). Also makes a plain video of the first
+      before and first after take for the user (video.attach): you cannot
+      see them; attach them, never cite them.
   help scenario   annotated scenario format, to write one for any app
 View any printed sheets[].path with the motion_view tool.
 `;

@@ -91,18 +91,16 @@ machine. The motion product is intentionally not implemented by this kickoff.
   workspace rebounded 3/3 (probe deleted). Not yet run with the agent. GBrain
   still holds the rehearsal case; soft-delete it before a clean run. Prompts:
   [demo.md](docs/demo.md#agent-built-target-trailhead).
-- **User video from `motion compare`, 3:55 PM.** Compare now also renders a
-  before/after video for the user (first before + first after take): real
-  speed, then 1/4× over its window, cropped by `--crop`, cursor and click
-  ripple from the trigger position capture now records. MP4 + WebM +
-  `player.html`. The separate `video` command was removed. Scratch storefront
-  check: the one-frame reopen shows for 1 video frame at real speed and 4 in
-  slow motion; the fixed take closes cleanly. **Real UI turn** (run
-  `aa02c4c9…`): the agent attached `player.html` and QM played it inline
-  (sandboxed iframe, WebM, readyState 4, playing;
-  `artifacts/video-dev/inline-test.png`). Skill now tells the agent to attach
-  the final compare's `video.attach`, say where to look in text, and not
-  attach sheets. Probes deleted.
+- **User videos from `motion compare`, 4:05 PM.** Compare now also encodes two
+  plain videos for the user, the first before and first after take, at real
+  speed (60 fps, every captured frame shown at least once: 20/20 and 19/19 in
+  the scratch check) with a cursor at the click position capture now records.
+  Each has an inline `.html` player (WebM + MP4 data URIs). An earlier
+  side-by-side/slow-motion version was dropped as too much; the separate
+  `video` command was removed. Real UI turn `aa02c4c9…` showed an attached
+  `.html` player playing inline in QM chat (WebM, readyState 4). The skill
+  says to attach `video.attach`, label Before and After, say where to look,
+  and not attach sheets.
 
 ## Working foundation
 

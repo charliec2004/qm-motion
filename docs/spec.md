@@ -481,29 +481,26 @@ section 6.
 - **What it does not do:** it never states whether the defect is present, and
   it applies no thresholds or "jump" flags; the agent judges each take.
 
-## 7b. The user's before/after video (made by `motion compare`)
+## 7b. The user's before and after videos (made by `motion compare`)
 
-After its sheets, `compare` renders a video for the user from the first before
-and first after take, into its own output directory: `before-after.mp4`
-(H.264), `before-after.webm` (VP9) and `player.html` (both embedded as data
-URIs). Its result gains `video: { attach: [player.html, before-after.mp4],
-durationS, takes, realSpeedMs, slowMotionMs, notes, note }`. It is built only
-from saved frames; capture, the tables, the sheets and `motion_view` are
-unchanged, and the model never sees the video. A render failure becomes a
-compare warning and `video: null`; the evidence is still returned.
+After its sheets, `compare` encodes two plain videos for the user, one of the
+first before take and one of the first after take, into its output directory:
+`before.mp4`/`before.webm`/`before.html` and the same for `after`. Its result
+gains `video: { attach: [before.html, after.html], mp4, takes, note }`. They
+are built only from saved frames; capture, the tables, the sheets and
+`motion_view` are unchanged, and the model never sees them. A render failure
+becomes a compare warning and `video: null`; the evidence is still returned.
 
-- **Timeline:** real speed from `-recordBeforeMs` to `recordAfterMs`, a 0.6 s
-  hold, then compare's `--from..--to` at 1/4 speed, a hold. 60 fps.
-- **Frame choice:** the latest frame captured at or before the source time,
-  advancing at most one frame per video frame, so every captured frame is on
-  screen at least once.
-- **Picture:** compare's `--crop` (scaled up to 2×), BEFORE and AFTER side by
-  side, a speed badge and ms-from-trigger clock, and a cursor with a click
-  ripple at `manifest.trigger.x/y` (a key badge for press triggers). No
-  captions or markers from the agent; its reply says where to look.
-- **Delivery:** QM chat previews `.html` attachments in a sandboxed 360 px
-  iframe and offers video files only as downloads. Verified September 27 in a
-  real UI turn: the attached `player.html` played inline (WebM source).
+- **Timing:** real speed at 60 fps from the first frame to `recordAfterMs`.
+  Each tick shows the latest frame captured by then, advancing at most one
+  frame per tick, so every captured frame is on screen at least once.
+- **Picture:** the captured frames as they are, plus an arrow cursor at
+  `manifest.trigger.x/y` (headless Chromium draws none). No side by side,
+  labels, clock, slow motion or captions; the agent's reply says which video
+  is which and where to look.
+- **Delivery:** QM chat previews `.html` attachments inline (sandboxed 360 px
+  iframe) and offers video files only as downloads, so each `.html` embeds
+  the WebM and MP4 as data URIs. Verified September 27 in a real UI turn.
 
 ## 7a. Chrome animation details (optional; cut early)
 
