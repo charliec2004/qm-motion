@@ -33,10 +33,18 @@ machine. The motion product is intentionally not implemented by this kickoff.
   row `+259.8 … 76.78`) and one 18-frame sheet in 1.8 s; a tall crop split into
   3 sheets automatically. Sheet frame #17 (+268.2 ms) shows the reopened
   answer. `artifacts/motion/m3-inspect-*.json`, `artifacts/motion/m3/`.
-- **M4 passed, 1:55 PM.** `motion compare` on the M2 takes vs 3 unchanged
+- **M4 passed, 1:53 PM.** `motion compare` on the M2 takes vs 3 unchanged
   "after" takes: per-take tables (reopen in all 6), 3 time-sliced sheets with
   one labelled row per take, same-revision warning; a take at an 800 px viewport
   was refused naming the field. `artifacts/motion/m4-*.json`, `artifacts/motion/m4/`.
+- **M5 passed, 1:59 PM.** Skill deployed (layer v5); demo reset with defect
+  hints (README, check.mjs, package name, baseline commit message) kept out of
+  the agent's copy. One real turn with the verbatim request (87 s): the agent
+  wrote its own scenario, captured 3 takes, read the table, viewed sheets with
+  `motion_view`, fixed `style.css` (`forwards` on the collapse), captured 3
+  after-takes, compared, attached 2 sheets, and wrote a searchable GBrain case.
+  Host re-check: before takes reopen at +276.4/+261.3/+277.6 ms, after takes
+  none. The reply itself cites no ms; the case does. `artifacts/motion/m5-*`.
 
 ## Working foundation
 
