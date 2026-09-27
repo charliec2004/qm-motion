@@ -110,6 +110,16 @@ machine. The motion product is intentionally not implemented by this kickoff.
   - Scratch takes and the scratch app were deleted. GBrain still holds that
     test case (`cases/motion-20260927t224445-probevb-1-e5b4`, it describes the
     rebound): back it up and soft-delete it before a clean demo run.
+- **Rehearsal primed, 4:15 PM.** Leak sweep found more than files: QM's
+  per-user memory (injected into every turn) held notes from the mock run,
+  including "a fix to the first FAQ answer's closing animation". It is now
+  reset to the onboarding marker (backup in `artifacts/rehearsal-archive/`),
+  36 sessions are archived, and the in-computer archives, dead background job
+  logs, npm logs and `/tmp` leftovers moved to host archives. `npm run
+  trailhead -- install` now does all of this and ends with a leak scan; it
+  passed: storefront `9b465c4`, GBrain empty, memory reset, 0 open sessions.
+  Delivered attachments stay in QM's file store (no supported delete). Next:
+  New session in the web UI, then prompt 1 from demo.md.
 
 ## Working foundation
 

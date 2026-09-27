@@ -146,13 +146,27 @@ Radix component. Disclose the pinned versions and `createRoot` as setup: the
 rebound needs a concurrent root and did not appear with `ReactDOM.render`
 (0/3 vs 3/3 takes on September 27).
 
-**Prepare.** `npm run trailhead -- install` moves every earlier demo copy and
-motion take from `/root/workspace` to `/root/demo-archive/<time>/`, installs a
-fresh copy at `/root/workspace/trailhead-storefront` with one Git commit, and
-stops earlier Vite servers. It does not touch GBrain: back up and soft-delete
-earlier `cases/` separately. Verified September 27: pages, routing, tabs
-keyboard navigation and `createRoot` work; an ordinary keyframe accordion
-added to a copy outside the workspace rebounded in 3/3 takes (probe deleted).
+**Prepare.** First back up and soft-delete GBrain `cases/` (the operator runs
+the delete). Then `npm run trailhead -- install` primes the rehearsal:
+
+- QM's per-user memory, which is injected into every turn, is backed up and
+  reset to the onboarding marker, and every open session is archived;
+- every earlier run's files leave the agent computer (workspace leftovers,
+  motion takes, in-computer archives, dead background job logs, npm logs,
+  `/tmp`) for `artifacts/rehearsal-archive/<time>/` on the host;
+- a fresh copy is installed at `/root/workspace/trailhead-storefront` with one
+  Git commit;
+- a leak scan must pass: no earlier-run words in the computer, GBrain empty,
+  QM memory reset. `npm run trailhead -- scan` repeats it alone.
+
+Not removable: QM keeps earlier delivered attachments in its file store with no
+supported delete. The agent has no listing of them (`files.json` is a morning
+snapshot), so reaching one would mean guessing an exact name. In the web UI,
+click **New session** first; the page may reopen an archived chat.
+
+Verified September 27: pages, routing, tabs keyboard navigation and
+`createRoot` work; an ordinary keyframe accordion added to a copy outside the
+workspace rebounded in 3/3 takes (probe deleted).
 
 Each prompt goes in the same new web session:
 
