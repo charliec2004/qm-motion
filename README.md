@@ -2,8 +2,10 @@
 
 Give QM's coding agent intermediate visual evidence so it can investigate a web
 interaction, fix the application, and verify the result over time. GBrain keeps
-concise evidence-backed cases. The kickoff environment works; the motion
-extension is the next implementation task.
+concise evidence-backed cases. Built and verified on September 27: the
+`motion` CLI (capture, inspect, compare with before/after videos for the
+user), the `motion_view` core patch, the agent skill, and an end-to-end
+agent-built demo (see [docs/rehearsal.md](docs/rehearsal.md)).
 
 **New here?** Read [the product in plain words](docs/brief.md#in-plain-words)
 first. What existed before the hackathon build window is disclosed in
@@ -75,7 +77,6 @@ Read [PROGRESS.md](PROGRESS.md) for exact evidence and limitations,
 [docs/demo.md](docs/demo.md) for reproduction and reset. Architecture,
 provenance, licenses, and optional later releases are in [docs/](docs/).
 
-First add `motion_view` and prove it with one withheld-code turn ([plan
-milestone 1](docs/plan.md#milestones)). Incoming attachments already pass vision
-checks; the `motion` commands, `motion_view` and the demo repair remain
-unimplemented.
+The build log with evidence for every milestone and rehearsal is in
+[PROGRESS.md](PROGRESS.md); limits and deferred work are in
+[docs/roadmap.md](docs/roadmap.md).

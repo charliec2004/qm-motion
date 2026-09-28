@@ -2,7 +2,8 @@
 
 Extend QM's coding agent with temporal browser evidence: reproduce, capture,
 inspect, edit, repeat, compare, and report. GBrain retains concise case records.
-This kickoff prepares the environment; the motion extension is still to build.
+The motion extension is built and verified end to end (see PROGRESS.md);
+`docs/rehearsal.md` runs the demo.
 
 ## Read first
 
