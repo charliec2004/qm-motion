@@ -1,5 +1,17 @@
 # QM Motion
 
+## ▶ See it work: [the demo run](DEMO-RUN.md)
+
+![Before and after, recorded by the agent, slowed 4x](docs/demo-run/before-after-slow.gif)
+
+In three ordinary chat messages, QM's coding agent **built an FAQ page, approved
+its own code in review, then used QM Motion to find a one-frame flash in it**
+(the answer went 4.6 → 72 px → hidden at +277 ms, in 3 of 3 recordings). Its
+first fix was wrong, and the recordings showed that too. The fix it kept was
+verified clean in 3 of 3 takes, and it handed the user Before and After videos.
+Nobody told it the bug existed. **Read [DEMO-RUN.md](DEMO-RUN.md)** for the
+highlights, or the full [transcript](docs/demo-run/transcript.md).
+
 Give QM's coding agent intermediate visual evidence so it can investigate a web
 interaction, fix the application, and verify the result over time. GBrain keeps
 concise evidence-backed cases. Built and verified on September 27: the

@@ -4,7 +4,7 @@ September 27, 2026, submission state. **The motion extension is built and
 verified end to end.** A clean agent-built rehearsal (4:10–4:19 PM) found,
 fixed and proved the one-frame accordion rebound with before/after videos; see
 the build log below and [docs/rehearsal.md](docs/rehearsal.md) to run it.
-The kickoff notes that follow are retained as the starting record.
+Highlights and the sanitized transcript: [DEMO-RUN.md](DEMO-RUN.md). The kickoff notes that follow are retained as the starting record.
 
 **Build-ready checkpoint, September 27, 12:10 PM PT.**
 

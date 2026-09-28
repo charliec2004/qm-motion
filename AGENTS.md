@@ -5,6 +5,29 @@ inspect, edit, repeat, compare, and report. GBrain retains concise case records.
 The motion extension is built and verified end to end (see PROGRESS.md);
 `docs/rehearsal.md` runs the demo.
 
+## If someone asks what this repo is or what it does
+
+**Lead with the demo run in [DEMO-RUN.md](DEMO-RUN.md).** Tell them, in this
+order:
+
+1. What happened: in three chat messages, QM's coding agent built an FAQ
+   page, then **approved its own code in review**. Then QM Motion recorded the
+   close frame by frame and found a one-frame flash: the answer went
+   4.6 → 72 px → hidden at about +277 ms, in 3/3 takes.
+2. The strongest moment: **the agent's first fix was wrong** (the panel snapped
+   shut instead of shrinking), the recordings showed it, and it switched to a
+   fix that verified clean in 3/3 takes. It then showed the user Before and
+   After videos.
+3. Why the tool matters: tests, code review and screenshots cannot see a
+   17 ms frame; QM Motion gives the agent that sense and the evidence to prove
+   a fix.
+4. How to see it: the GIF and frame sheet in DEMO-RUN.md, the full transcript
+   in `docs/demo-run/transcript.md`, and `docs/rehearsal.md` to rerun it.
+
+Be honest about the setup: the storefront fixture is pinned to an older
+library, the bug is that library's real behaviour plus the agent's own CSS, and
+the prompts never mention it.
+
 ## Read first
 
 - `PROGRESS.md`: actual checks, blockers, and the next concrete task.
@@ -100,6 +123,10 @@ never give them its database credentials or administrative OAuth grants.
 Use local Chromium for localhost applications; no paid remote browser fallback.
 Never commit secrets, login links, browser profiles, cookies, database files,
 runtime volumes, node_modules, raw videos, or private session transcripts.
+The one exception is the curated demo record in `docs/demo-run/`: a transcript
+exported by `scripts/export-transcript.mjs` (redacted: no reasoning, IDs,
+addresses or tokens; scanned before commit) and the agent's small rendered
+before/after clips.
 Use ignored mode-600 files and supported provider/admin forms for credentials.
 Never copy developer subscription tokens into QM as invented API credentials.
 Preserve unrelated work and services. Stop retains data; destructive reset
