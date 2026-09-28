@@ -113,7 +113,7 @@ An exit code or filename alone is not proof of a successful agent workflow.
 
 - `deployment/`: CLI-managed QM config, support Compose services, runtime skills.
 - `scripts/`: repeatable operator setup, access, and smoke checks.
-- `src/`: motion integration implementation (not implemented during kickoff).
+- `src/motion/`: the `motion` CLI (capture, inspect, compare with user videos).
 - `docs/`: short product, setup, implementation, and demo documentation.
 - `.agents/skills/`: developer skills discovered by Codex/Astra.
 - `.claude/skills/`: relative links for Claude Code/Fable discovery.
