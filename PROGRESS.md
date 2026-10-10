@@ -53,8 +53,10 @@
   serves the new code and the personal agent’s running scratch app. The
   original feature branch was deleted locally and remotely. PR
   [#7](https://github.com/charliec2004/qm-motion/pull/7) carries the live-render
-  follow-up; final merge/cleanup is in progress. No API-key or route blocker
-  remains. A naturally rejected repair and unavailable-app handling were not
+  follow-up, merged as `44acbcb` and deployed from main. Its branch was
+  deleted locally and remotely, and issues #1–#5 are closed. The immediate
+  image remains visible after completion and transcript reload. No API-key
+  or route blocker remains. A naturally rejected repair and unavailable-app handling were not
   re-exercised in this verification run.
 
 September 27, 2026, submission state. **The motion extension is built and
