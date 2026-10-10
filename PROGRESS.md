@@ -8,8 +8,9 @@
   See [the workflow guide](docs/motion-workflow.md).
 - Independent GPT-6.1 Sol reviews found and corrected iframe-download handling,
   observed playback end times, marker validation, reload/keyboard-navigation
-  replay errors, and premature final-file delivery in transcript replay.
-- **Passed:** 14 focused tests including real Chromium playback, interruption,
+  replay errors, premature final-file delivery in transcript replay, and
+  navigation alignment being overwritten by a later hash change.
+- **Passed:** 15 focused tests including real Chromium playback, interruption,
   navigation, export/replay, unsupported actions and keyboard regression cases;
   13 isolated runtime tests against extracted pinned image source and shipped
   web code; full capture → action-aligned inspect → compare sheets/player/MP4

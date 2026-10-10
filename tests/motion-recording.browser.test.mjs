@@ -20,6 +20,7 @@ async function fixture(fn) {
   const workspace = mkdtempSync(join(tmpdir(), 'motion-browser-'));
   const server = createServer((req, res) => {
     res.setHeader('content-type', 'text/html');
+    if (req.url === '/hash') return res.end('<html><body>Destination<script>setTimeout(()=>location.hash="later",80)</script></body></html>');
     res.end((req.url === '/next' ? '<html><head></head><body><button id="done">Done</button><div id="panel">Next document</div></body></html>' : pageHtml).replace('</head>', `<script>${recorderSource()}</script></head>`));
   });
   await new Promise(r => server.listen(0, '127.0.0.1', r));
@@ -33,6 +34,16 @@ async function fixture(fn) {
   try { await fn({ workspace, url, scenario, readTake }); }
   finally { await new Promise(r => server.close(r)); rmSync(workspace, { recursive: true, force: true }); }
 }
+
+test('navigation alignment retains the first commit when the destination later changes its hash', { skip: !chromium }, async () => fixture(async ({ workspace, url, scenario, readTake }) => {
+  const result = await oneTake(chromium, 'test', scenario({ actions: [{ id: 'navigate', atMs: 0, action: 'navigate', url: url + 'hash' }] }), 'nav-anchor', 1, { workspace });
+  assert.equal(result.status, 'complete', result.error);
+  const take = readTake(result);
+  assert.equal(take.manifest.actions[0].event.url, url + 'hash');
+  assert.equal(take.manifest.trigger.wallMs, take.manifest.actions[0].event.wallMs);
+  assert.ok(take.manifest.navigations.some(n => n.url === url + 'hash#later'));
+  assert.ok(take.manifest.navigations.find(n => n.url === url + 'hash#later').wallMs > take.manifest.trigger.wallMs);
+}));
 
 test('real rapid close/reopen dispatches during animation, repeated fresh takes, navigation and partial failure', { skip: !chromium }, async () => fixture(async ({ workspace, url, scenario, readTake }) => {
   const actions = [{ id: 'close', action: 'click', selector: '#toggle', atMs: 0 }, { id: 'reopen', action: 'click', selector: '#toggle', atMs: 80 }, { id: 'navigate', action: 'navigate', url: url + 'next', atMs: 160 }, { id: 'done', action: 'click', selector: '#done', atMs: 240 }];

@@ -43,7 +43,7 @@ export async function oneTake(chromium, playwrightVersion, scenario, label, n, o
       if (!recording || frame !== page.mainFrame()) return;
       const event = { event: 'navigation', wallMs: Date.now(), url: frame.url(), timingSource: 'controller observation of Playwright framenavigated (commit)' };
       navigations.push(event);
-      if (navigationActionId) events.set(navigationActionId, event);
+      if (navigationActionId && !events.has(navigationActionId)) events.set(navigationActionId, event);
     });
     await page.exposeBinding('__motionEvidence', ({ frame }, evidence) => {
       if (!recording || frame !== page.mainFrame()) return;
