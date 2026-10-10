@@ -1,6 +1,6 @@
 # QM Motion progress
 
-## October 9: motion workflow improvements (merged and locally deployed; live checks blocked)
+## October 9: motion workflow improvements (merged and deployed; live checks passed)
 
 - Issues #1–#5 are implemented: synchronized comparison with actual-frame
   stepping/markers, preview demonstration export, multi-action capture with
@@ -12,17 +12,30 @@
   navigation alignment being overwritten by a later hash change.
 - **Passed:** 15 focused tests including real Chromium playback, interruption,
   navigation, export/replay, unsupported actions and keyboard regression cases;
-  13 isolated runtime tests against extracted pinned image source and shipped
+  14 isolated runtime tests against extracted pinned image source and shipped
   web code; full capture → action-aligned inspect → compare sheets/player/MP4
   workflow in the packaged sandbox image; invalid markers rejected. This last
   check is an isolated image test, not a successful QM agent workflow.
 - The CLI now ships in `qm-motion-sandbox:motion` at
   `/opt/qm-motion/cli/cli.mjs`; `npm start` builds its small image layer. Fixtures
   and tests are excluded. Core and web overlays build and run successfully.
-- **Live blocker:** a real model turn failed with OpenAI `401 invalid_api_key`.
-  The user must replace `OPENAI_API_KEY` locally in `deployment/.env`; do not
-  copy credentials from another QM deployment. Automatic invocation and
-  actual interim-image delivery still need real-turn verification.
+- **Live checks passed after the user updated the primary `.env`:** real model
+  command execution and independent file read; scoped GBrain authentication;
+  automatic skill loading, capture, inspection and image viewing after an
+  animated-menu request that did not mention recordings; text-only edits with
+  no capture; explicit recording opt-out with an honest unchecked report;
+  and subsequent explicit inspection in that same conversation.
+- Live verification caught an additional UI bug: successful immediate files
+  were missing from the stream consumer’s shallow message copy until turn
+  completion or reload. The follow-up fix publishes a text-preserving stream
+  update and adds a regression using the shipped consumer. A real tailnet
+  browser now renders the new sheet while the run remains `running`; the
+  agent then continues capturing three fresh reversal takes.
+- The deployed tailnet preview exported a two-click demonstration from the
+  real agent-built app. Replaying that unchanged JSON in the actual personal
+  computer completed both actions; actual timings are retained separately
+  from requested offsets. The scratch app is not a Git repository, so its
+  revision is unknown; no before/after improvement claim is made.
 - The old host port 8081 and tailnet port 443 belong to the separate `qm-plain`
   deployment, which is preserved. QM Motion now uses host 18980–18982 and
   public URL `https://charlies-pc.tail1d1ed7.ts.net:9443`. Local services and
@@ -37,9 +50,12 @@
   `60d21cf`; primary main advanced with unrelated edits restored. Clean main
   core/web/skills and the rebuilt CLI image are deployed; authenticated local
   API access passes. TLS upstream is updated. The preview recorder endpoint
-  serves the new code; app preview returns 502 until an agent computer/dev
-  server is available. The feature branch was deleted locally and remotely.
-  The API-key blocker above still prevents live sign-off.
+  serves the new code and the personal agent’s running scratch app. The
+  original feature branch was deleted locally and remotely. PR
+  [#7](https://github.com/charliec2004/qm-motion/pull/7) carries the live-render
+  follow-up; final merge/cleanup is in progress. No API-key or route blocker
+  remains. A naturally rejected repair and unavailable-app handling were not
+  re-exercised in this verification run.
 
 September 27, 2026, submission state. **The motion extension is built and
 verified end to end.** A clean agent-built rehearsal (4:10–4:19 PM) found,
