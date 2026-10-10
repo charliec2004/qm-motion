@@ -38,11 +38,13 @@ export function patchBundle(source) {
     source = source.replace(before, after);
   };
   // Zy is core-bridge.ts applyRun, shared by SSE and polling. Inject before
-  // the terminal gate, after mergeWork; notify redraws the active assistant.
+  // the terminal gate, after mergeWork. The stream consumer shallow-copies
+  // partials, so a work redraw alone cannot publish a new top-level file list.
+  // An empty delta refreshes that copy without modifying assistant text.
   replaceOnce('function Zy(e,t,n,i,o){',
     `const qmMergeImmediateFiles=${mergeImmediateFiles.toString()};function Zy(e,t,n,i,o){`);
   replaceOnce('oq(s,i.stale===!0,o);const c=',
-    'qmMergeImmediateFiles(t,i.activity,Vb)&&o?.();oq(s,i.stale===!0,o);const c=');
+    'qmMergeImmediateFiles(t,i.activity,Vb)&&(e.push({type:"text_delta",contentIndex:0,delta:"",partial:t}),o?.());oq(s,i.stale===!0,o);const c=');
   // Keep interim files when final reply attachments arrive, deduping by ID.
   replaceOnce('t.deliveredFiles=l,o?.()',
     't.deliveredFiles=[...(t.deliveredFiles??[]).filter(f=>!l.some(a=>a.artifactId===f.artifactId)),...l],o?.()');

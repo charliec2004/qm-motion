@@ -25,7 +25,7 @@ Inspected QM reference commit `1562826691680bff053c47347e88f032c336d84f`:
 - The tracked `motion-evidence-image.patch` gives the model image pixels;
   `motion_view` does not deliver a user attachment.
 
-## Implemented runtime change (isolated checks; live verification pending)
+## Implemented runtime change
 
 `deployment/runtime/patches/motion-interim-attachments.patch` adds opt-in
 `attach` parameter `delivery: "immediate"`. On ordinary web turns it registers
@@ -46,12 +46,12 @@ base digests, isolated test command and live check procedure are in
 `deployment/runtime/interim-attachments/README.md`.
 
 Both core and web UI overlays must be built and deployed together, along
-with this skill. Twelve isolated checks passed against source extracted from
+with this skill. Fourteen isolated checks passed against source extracted from
 the immutable image and the actual compiled web handler; these cover tool
 forwarding, immediate/queued semantics, failure boundaries, live promotion,
 final preservation and the asset graph. They use mocked file collection and
 stream helpers and do not prove browser delivery, ACL enforcement or agent
-workflow completion. No services were restarted for these checks.
+workflow completion. See `PROGRESS.md` for the integrating operator’s deployment and live results.
 
 ## Focused acceptance checks after integration
 

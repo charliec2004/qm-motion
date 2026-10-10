@@ -1,7 +1,8 @@
 # Immediate attachments for issue #4
 
-Implemented and isolated-tested; live delivery and model compliance still need
-integration checks. No commits, service restarts or deployment were performed.
+Implemented and isolated-tested. Integrated deployment and real agent/browser
+verification status are recorded in `PROGRESS.md`; the checks below distinguish
+stream propagation from actual image rendering.
 
 ## Version and ownership
 
@@ -48,6 +49,8 @@ no `reach` call and no new external audience. The successful recorded tool
 result has `tool: "attach", ok: true, delivery: "immediate", files: [...]`.
 The web renderer promotes only confirmed artifact-backed files with that
 marker during the active run. The same result remains in transcript history.
+The bridge publishes an empty stream delta when immediate files change, so the
+stream consumer refreshes its shallow message copy without changing text.
 Immediate files do not replace or discard queued files, and do not appear
 again as closing-reply attachments. A final reply's files merge with interim
 files on the active bubble. Repeated snapshots dedupe by artifact ID.
@@ -78,13 +81,13 @@ TMPDIR=/tmp QM_CORE_SOURCE=/tmp/<patched-core> QM_WEB_ROOT=/tmp/<pinned-web> \
   deployment/runtime/interim-attachments/interim-attachments.test.mjs
 ```
 
-13 checks passed using `/tmp/qm-motion-interim-sequence-check` and
+14 checks passed using `/tmp/qm-motion-interim-sequence-check` and
 `/tmp/qm-motion-interim-web-base` with the command above. The tests run the
 actual patched core staging module and attach tool, with mocked file
 collection/transfer, then the actual pinned web
 bundle's modified `applyRun`, with stream helpers stubbed. They check the
 immediate/default modes, staged-file preservation, path/count/failure bounds,
-failed registration, live promotion before terminal completion, final-file
+failed registration, live promotion through the shipped stream consumer before terminal completion, final-file
 preservation and deduplication, checksum rejection, rewritten asset imports,
 gzip equivalence, and transcript retention when filenames are reused. The
 ordering regression replays ordinary `final.png` → immediate `interim.png` →
