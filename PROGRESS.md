@@ -1,5 +1,39 @@
 # QM Motion progress
 
+## October 9: motion workflow improvements (reviewed; release in progress)
+
+- Issues #1–#5 are implemented: synchronized comparison with actual-frame
+  stepping/markers, preview demonstration export, multi-action capture with
+  chosen alignment, scoped automatic checks, and opt-in interim image delivery.
+  See [the workflow guide](docs/motion-workflow.md).
+- Independent GPT-6.1 Sol reviews found and corrected iframe-download handling,
+  observed playback end times, marker validation, reload/keyboard-navigation
+  replay errors, and premature final-file delivery in transcript replay.
+- **Passed:** 14 focused tests including real Chromium playback, interruption,
+  navigation, export/replay, unsupported actions and keyboard regression cases;
+  13 isolated runtime tests against extracted pinned image source and shipped
+  web code; full capture → action-aligned inspect → compare sheets/player/MP4
+  workflow in the packaged sandbox image; invalid markers rejected. This last
+  check is an isolated image test, not a successful QM agent workflow.
+- The CLI now ships in `qm-motion-sandbox:motion` at
+  `/opt/qm-motion/cli/cli.mjs`; `npm start` builds its small image layer. Fixtures
+  and tests are excluded. Core and web overlays build and run successfully.
+- **Live blockers:** a real model turn failed with OpenAI `401 invalid_api_key`.
+  The user must replace `OPENAI_API_KEY` locally in `deployment/.env`; do not
+  copy credentials from another QM deployment. Automatic invocation and
+  actual interim-image delivery still need real-turn verification.
+- The old host port 8081 and tailnet port 443 belong to the separate `qm-plain`
+  deployment, which is preserved. QM Motion now uses host 18980–18982 and
+  public URL `https://charlies-pc.tail1d1ed7.ts.net:9443`. Local services and
+  authenticated loopback access pass. The new route requires the user to run
+  `sudo tailscale serve --bg --https=9443 http://127.0.0.1:18981` (operator access
+  denied; sudo requires a password). Existing routes are unchanged.
+- Primary checkout has unrelated private-memory edits in config/runtime and
+  computer.py; preserve them. Release uses clean config/runtime/layer paths
+  via QM CLI overrides. Evidence is retained privately in
+  `/tmp/qm-motion-release/` pending transfer into ignored host artifacts.
+- Merge, final deployment from main and branch cleanup are pending.
+
 September 27, 2026, submission state. **The motion extension is built and
 verified end to end.** A clean agent-built rehearsal (4:10–4:19 PM) found,
 fixed and proved the one-frame accordion rebound with before/after videos; see

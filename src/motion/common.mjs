@@ -1,10 +1,11 @@
 // Shared helpers: argument parsing, JSON output, take paths.
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 export const WORKSPACE = '/root/workspace';
 export const MOTION_DIR = 'artifacts/motion';
-export const CLI = `node ${WORKSPACE}/motion/cli.mjs`;
+export const CLI = `node ${fileURLToPath(new URL('./cli.mjs', import.meta.url))}`;
 
 export class UsageError extends Error {}
 

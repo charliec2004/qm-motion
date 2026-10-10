@@ -47,8 +47,8 @@ source also exhibits the environment omission. The tracked
 field only in the AWS environment. Without it, core could not reach the local
 Docker computer's execution daemon. The patch applies with `git apply --check`
 in the image and the rebuilt running core passed real agent execution.
-Other overlay Dockerfiles are unchanged `FROM` references to the original
-web-ui, auth, and portal images. This environment correction does not implement
+Auth and portal overlays retain their original `FROM` references. The web UI
+now has the version-pinned immediate-attachment overlay described below. This environment correction does not implement
 the `motion_view` image tool.
 
 The second [patch](../deployment/runtime/patches/model-request-retry.patch) sets
@@ -62,6 +62,14 @@ The adapter retries the current provider request before response headers,
 not completed tools. Outer session retries remain unchanged. This replaces
 the observed five-minute, zero-provider-retry wait with bounded attempts;
 it does not establish the remote cause of the intermittent stalls.
+
+The [immediate attachment patch](../deployment/runtime/patches/motion-interim-attachments.patch)
+and [web UI overlay](../deployment/runtime/interim-attachments/README.md)
+add opt-in current-conversation image delivery during a running turn. The
+linked README records exact immutable image bases, original file hashes, the
+checksum-guarded compiled UI seams, and tests. Both overlays must deploy together.
+The [motion CLI image layer](../deployment/motion.Dockerfile) adds our source
+on top of the bootstrapped local sandbox base, excluding test fixtures.
 
 The supported QM administrator model registry loads
 [deployment/model-gpt-6-sol.json](../deployment/model-gpt-6-sol.json) because

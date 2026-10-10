@@ -3,6 +3,7 @@ import { mkdirSync } from 'node:fs';
 import { CLI, MOTION_DIR, UsageError, crop as parseCrop, fmtMs, loadTake, num, takePath } from './common.mjs';
 import { buildTable } from './table.mjs';
 import { cropBox, frameSize, renderSheets, tileSize } from './sheets.mjs';
+import { alignTake } from './scenario.mjs';
 
 export const FRAME_LAG_MS = 30;
 
@@ -24,7 +25,7 @@ export function requireTrigger(take) {
 
 export async function inspect({ flags, positional }) {
   if (positional.length !== 1) throw new UsageError('inspect needs exactly one <take-id>');
-  const take = loadTake(positional[0]);
+  const take = alignTake(loadTake(positional[0]), flags['align-action']);
   requireTrigger(take);
   const { from, to } = takeWindow([take], flags);
   const crop = parseCrop(flags);
@@ -33,6 +34,7 @@ export async function inspect({ flags, positional }) {
   if (scenario.watch.length && !samples) throw new Error(`no trace samples between ${from} and ${to} ms; widen --from/--to (the take spans ${fmtMs(take.trace[0]?.msFromTrigger ?? 0)} to ${fmtMs(take.trace.at(-1)?.msFromTrigger ?? 0)} ms)`);
   const frames = framesIn(take, from, to);
   const warnings = [];
+  if (take.manifest.status === 'partial') warnings.push(`partial capture: ${take.manifest.error ?? 'action sequence incomplete'}`);
   let sheets = [];
   if (frames.length) {
     const size = await frameSize(takePath(take.takeId, frames[0].file));
@@ -58,7 +60,9 @@ export async function inspect({ flags, positional }) {
     });
   }
   return {
-    ok: true, takeId: take.takeId, table,
+    ok: true, takeId: take.takeId, table, alignment: take.manifest.alignment,
+    actions: take.manifest.actions ?? [],
+    status: take.manifest.status ?? 'legacy', error: take.manifest.error ?? null,
     ...(scenario.watch.length ? {} : { tableNote: 'scenario has no watch list; sheets only' }),
     framesWindow: [from, to + FRAME_LAG_MS], frames: frames.length, sheets,
     ...(warnings.length ? { warnings } : {}),

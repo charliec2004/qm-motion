@@ -4,7 +4,7 @@
 }
 https://localhost:8443 {
   tls /certs/localhost.crt /certs/localhost.key
-  reverse_proxy host.docker.internal:8081
+  reverse_proxy host.docker.internal:18981
 }
 https://gbrain.qm.internal:3443 {
   tls /certs/localhost.crt /certs/localhost.key

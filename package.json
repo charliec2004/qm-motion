@@ -5,6 +5,7 @@
   "type": "module",
   "engines": { "node": ">=24" },
   "scripts": {
+    "test": "node --test src/motion/*.test.mjs tests/*.test.mjs",
     "bootstrap": "bash scripts/bootstrap.sh",
     "start": "bash scripts/start.sh",
     "stop": "bash scripts/stop.sh",

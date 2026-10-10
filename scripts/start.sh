@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 source "$(dirname "$0")/common.sh"
 python3 scripts/configure.py
+docker build -f deployment/motion.Dockerfile -t qm-motion-sandbox:motion .
 compose up -d
 qm check
 qm up --build-from runtime

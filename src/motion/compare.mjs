@@ -1,17 +1,20 @@
 // motion compare: before/after takes aligned on the trigger; one row per take, every frame in the window.
 import { randomBytes } from 'node:crypto';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { MOTION_DIR, UsageError, WORKSPACE, crop as parseCrop, fmtMs, loadTake, takePath } from './common.mjs';
 import { buildTable } from './table.mjs';
 import { cropBox, frameSize, renderSheets, tileSize } from './sheets.mjs';
 import { FRAME_LAG_MS, framesIn, requireTrigger, takeWindow } from './inspect.mjs';
-import { takeVideo } from './video.mjs';
+import { takeVideo, comparisonPlayer } from './video.mjs';
+import { alignTake } from './scenario.mjs';
+import { comparisonBounds, validateMarkers } from './comparison-player.mjs';
 
 const COLS = 8;
 const MUST_MATCH = [
   ['url', s => s.url], ['viewport', s => s.viewport], ['deviceScaleFactor', s => s.deviceScaleFactor],
-  ['reducedMotion', s => s.reducedMotion], ['ready', s => s.ready], ['setup', s => s.setup], ['trigger', s => s.trigger],
+  ['reducedMotion', s => s.reducedMotion], ['ready', s => s.ready], ['setup', s => s.setup],
+  ['actions', s => s.actions ?? [{ ...s.trigger, id: 'trigger', atMs: 0 }]],
 ];
 const same = (a, b) => JSON.stringify(a) === JSON.stringify(b);
 const ids = v => String(v ?? '').split(',').map(s => s.trim()).filter(Boolean);
@@ -20,11 +23,14 @@ export async function compare({ flags }) {
   const before = ids(flags.before), after = ids(flags.after);
   if (!before.length || !after.length) throw new UsageError('compare needs --before <id,id,id> and --after <id,id,id>');
   const takes = [...before.map((id, i) => ({ ...loadTake(id), label: `before ${i + 1}` })),
-    ...after.map((id, i) => ({ ...loadTake(id), label: `after ${i + 1}` }))];
+    ...after.map((id, i) => ({ ...loadTake(id), label: `after ${i + 1}` }))]
+    .map(t => alignTake(t, flags['align-action']));
   takes.forEach(requireTrigger);
 
   const ref = takes[0];
   for (const t of takes.slice(1)) {
+    if (t.manifest.alignment.actionId !== ref.manifest.alignment.actionId)
+      throw new Error('alignment actions differ; choose the same --align-action for both sides');
     for (const [field, get] of MUST_MATCH) {
       if (!same(get(ref.manifest.scenario), get(t.manifest.scenario)))
         throw new Error(`${field} differs: ${ref.takeId} has ${JSON.stringify(get(ref.manifest.scenario))}, ${t.takeId} has ${JSON.stringify(get(t.manifest.scenario))}; recapture with the same scenario`);
@@ -33,6 +39,7 @@ export async function compare({ flags }) {
       throw new Error(`browser differs: ${ref.takeId} has ${ref.manifest.browser}, ${t.takeId} has ${t.manifest.browser}; recapture with the same scenario`);
   }
   const warnings = [];
+  for (const t of takes) if (t.manifest.status === 'partial') warnings.push(`${t.takeId}: partial capture (${t.manifest.error ?? 'action sequence incomplete'})`);
   if (takes.some(t => t.manifest.scenario.name !== ref.manifest.scenario.name)) warnings.push('scenario names differ');
   if (takes.some(t => !same(t.manifest.scenario.watch, ref.manifest.scenario.watch))) warnings.push('watch lists differ; tables may have different columns');
   if (before.length < 3 || after.length < 3) warnings.push('fewer than 3 takes on a side; a one-frame defect can be missed');
@@ -42,6 +49,14 @@ export async function compare({ flags }) {
     warnings.push('before and after have the same app revision and diff; the after takes may not include your change');
 
   const { from, to } = takeWindow(takes, flags);
+  let markers = [];
+  if (flags.markers) {
+    try { markers = JSON.parse(readFileSync(flags.markers, 'utf8')); }
+    catch (e) { throw new UsageError(`could not read --markers JSON: ${e.message}`); }
+    if (!Array.isArray(markers)) throw new UsageError('--markers must contain a JSON array of {fromMs,toMs,label,description}');
+  }
+  try { validateMarkers(markers, comparisonBounds(takes)); }
+  catch (e) { throw new UsageError(`--markers: ${e.message}`); }
   const perTake = takes.map(t => framesIn(t, from, to));
   const outId = `compare-${new Date().toISOString().replace(/[-:]/g, '').slice(0, 15)}-${randomBytes(2).toString('hex')}`;
   const outDir = join(WORKSPACE, MOTION_DIR, outId);
@@ -80,19 +95,30 @@ export async function compare({ flags }) {
     }
   }
   const rows = takes.map((t, k) => ({ label: t.label, takeId: t.takeId, frames: perTake[k].length,
+    alignment: t.manifest.alignment, actions: t.manifest.actions ?? [],
+    status: t.manifest.status ?? 'legacy', error: t.manifest.error ?? null,
     table: buildTable(t.manifest.scenario.watch, t.trace, from, to).rows }));
   // For the user only: plain videos of the first before and first after take. Never part of the evidence.
   let video = null;
+  const rel = f => `${MOTION_DIR}/${outId}/${f.split('/').pop()}`;
   try {
-    const rel = f => `${MOTION_DIR}/${outId}/${f.split('/').pop()}`;
     const b = await takeVideo({ take: takes[0], name: 'before', outDir });
     const a = await takeVideo({ take: takes[before.length], name: 'after', outDir });
     video = { attach: [rel(b.player), rel(a.player)], mp4: [rel(b.mp4), rel(a.mp4)],
       takes: { before: takes[0].takeId, after: takes[before.length].takeId },
       note: 'For the user, not for you: you cannot see these. Attach both players (they play inline in chat); in your reply label them Before and After and say where to look.' };
   } catch (e) { warnings.push(`user videos not made: ${e.message.split('\n')[0]}`); }
+  try {
+    const comparison = comparisonPlayer({ before: takes.slice(0, before.length), after: takes.slice(before.length),
+      outDir, markers });
+    warnings.push(...comparison.warnings);
+    video = { ...video, attach: [rel(comparison.player), ...(video?.mp4 ?? [])], mp4: video?.mp4 ?? [],
+      takes: comparison.takes, interval: comparison.interval,
+      note: 'Attach all video.attach files: the comparison player and separate downloadable MP4s (iframe downloads are restricted). The player includes synchronized Before/After, take selectors, slow motion and frame stepping. Describe only evidence you viewed with motion_view.' };
+  } catch (e) { warnings.push(`comparison player not made: ${e.message.split('\n')[0]}`); }
   const result = { ok: true, sheets, warnings, framesWindow: [from, to + FRAME_LAG_MS], rows, video,
     next: sheets.length ? 'call motion_view with each sheet path' : 'no frames in this window; widen --from/--to' };
-  writeFileSync(join(outDir, 'compare.json'), JSON.stringify({ inputs: { before, after, from, to, crop: flags.crop ?? null }, ...result }, null, 2));
+  writeFileSync(join(outDir, 'compare.json'), JSON.stringify({ inputs: { before, after, from, to, crop: flags.crop ?? null,
+    alignAction: ref.manifest.alignment.actionId, markers }, ...result }, null, 2));
   return result;
 }

@@ -16,7 +16,7 @@ npm run login
 npm run status
 ```
 
-QM is **https://charlies-pc.tail1d1ed7.ts.net** on this deployment, accessible
+QM is **https://charlies-pc.tail1d1ed7.ts.net:9443** on this deployment, accessible
 from devices on the same Tailscale network. `login` obtains a short-lived link through
 `qm admin-login`, opens it without printing it, and uses the normal confirmation
 page. The dedicated browser profile lives in ignored `.state/login-browser/`.
@@ -52,27 +52,27 @@ commit it. This uses the supported QM login command, with the same credentials
 and confirmation flow. `npm run login` opens the browser on Linux, so it is only
 useful when you can see that desktop. Existing cookies for `localhost` do not
 sign you into the new hostname. After confirmation, bookmark
-**https://charlies-pc.tail1d1ed7.ts.net** for subsequent visits in that browser.
+**https://charlies-pc.tail1d1ed7.ts.net:9443** for subsequent visits in that browser.
 
 Tailscale Serve terminates HTTPS and proxies to the existing portal at
-`http://127.0.0.1:8081`. Serve is private to the tailnet; Funnel is not enabled.
-The one-time account Serve/HTTPS setup and this command configure the route:
+`http://127.0.0.1:18981`. Serve is private to the tailnet; Funnel is not enabled.
+The original hostname on port 443 belongs to another QM deployment. Leave that route unchanged. The one-time account Serve/HTTPS setup and this command configure QM Motion on port 9443:
 
 ```bash
-sudo tailscale serve --bg --https=443 http://127.0.0.1:8081
+sudo tailscale serve --bg --https=9443 http://127.0.0.1:18981
 tailscale serve status
 ```
 
 **Network caveat (observed September 27).** The QM Docker backend publishes
-core, portal and web UI on all interfaces (`0.0.0.0:8080–8082`, plus IPv6),
+core, portal and web UI on all interfaces (`0.0.0.0:18980–18982`, plus IPv6),
 not only through Tailscale. The TLS front door (8443) and GBrain (3443) are
-loopback-only. Whether the host firewall blocks 8080–8082 from the LAN was not
+loopback-only. Whether the host firewall blocks 18980–18982 from the LAN was not
 checked (it needs sudo). On an untrusted network, block those ports or change
 the bind address before relying on "private to the tailnet".
 
 The background route survives closing terminals and restarting Tailscale.
 `npm stop` still stops QM; the retained Serve route then has no running backend.
-To remove only this route, run `sudo tailscale serve --https=443 off`.
+To remove only this route, run `sudo tailscale serve --https=9443 off`.
 See [Tailscale Serve](https://tailscale.com/docs/features/tailscale-serve).
 The deployment's `publicUrl` controls the login origin; startup and smoke
 helpers read that address. GBrain's Docker-local address is unchanged.
@@ -91,7 +91,7 @@ sudo tailscale serve --bg --https=8443 http://127.0.0.1:15173
 Then open `https://charlies-pc.tail1d1ed7.ts.net:8443/`. With no dev server
 running, the page says so. `npm run preview -- status|stop`; remove the route
 with `sudo tailscale serve --https=8443 off`. The agent never sees this path;
-it keeps using its headless Chromium and captured evidence.
+it keeps using its headless Chromium and captured evidence. The preview now adds explicit demonstration recording controls; see [the motion workflow](motion-workflow.md).
 
 ## Fresh checkout
 
@@ -148,10 +148,10 @@ configuration validator, but email login is disabled without transport
 credentials. The verified path is administrator login. No Slack credentials,
 remote browser account, embedding key, or Anthropic key is needed.
 
-Tailscale Serve exposes QM on tailnet HTTPS port 443. Caddy retains loopback
+Tailscale Serve exposes QM on tailnet HTTPS port 9443. Caddy retains loopback
 ports 8443 (QM) and 3443 (GBrain), but use the configured Tailscale hostname for
 QM sign-in. The current QM CLI
-also publishes 8080 core, 8081 portal/auth, and 8082 web/admin on all host
+also publishes 18980 core, 18981 portal/auth, and 18982 web/admin on all host
 interfaces; keep those ports free. Application auth/signatures still apply.
 PostgreSQL is not published. The computer connects to
 `https://gbrain.qm.internal:3443` through a project Docker network; that name is
@@ -221,7 +221,7 @@ Smoke waits for actual computer parking before its independent Docker reads.
 - Image attachments work. Deployed QM's `read` tool still returns text; the
   small `motion_view` image tool is the first MVP dependency, detailed in
   [architecture.md](architecture.md#image-delivery-verified-by-reading-the-code).
-  No `motion` capture/inspect/compare command has been implemented yet.
+  The motion CLI is now shipped at `/opt/qm-motion/cli/cli.mjs` in the computer image.
 - GBrain runs without embeddings; keyword search is verified. Its `whoami`
   can report `agent_ready: false` for optional delegated-agent grants while
   our intended read/write operations work. Do not expand grants just for that

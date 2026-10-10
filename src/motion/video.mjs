@@ -5,6 +5,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { round, takePath } from './common.mjs';
 import { frameSize } from './sheets.mjs';
+import { observedEndMs } from './comparison-player.mjs';
 
 const FPS = 60;
 // 24x32 arrow cursor, tip at (1,1); headless Chromium draws none, so it is overlaid at the recorded pointer position.
@@ -15,7 +16,8 @@ const CURSOR_PNG = 'iVBORw0KGgoAAAANSUhEUgAAABgAAAAgCAYAAAAIXrg4AAADR0lEQVR4nLRV
 export async function takeVideo({ take, name, outDir }) {
   const sc = take.manifest.scenario;
   const frames = take.frames;
-  const start = frames[0].msFromTrigger, end = Math.max(sc.recordAfterMs, frames.at(-1).msFromTrigger);
+  if (!frames.length) throw new Error(`take ${take.takeId} has no captured frames for a clip`);
+  const start = frames[0].msFromTrigger, end = Math.max(observedEndMs(take), frames.at(-1).msFromTrigger);
   const ticks = [];
   for (let i = 0, shown = 0; start + i * (1000 / FPS) <= end; i++) {
     const t = start + i * (1000 / FPS);
@@ -24,11 +26,13 @@ export async function takeVideo({ take, name, outDir }) {
     shown = Math.min(target, shown + 1);
     ticks.push(shown);
   }
+  // A burst at the end can leave frames after the final nominal tick.
+  for (let i = (ticks.at(-1) ?? -1) + 1; i < frames.length; i++) ticks.push(i);
 
   const inputs = ['-f', 'image2pipe', '-framerate', String(FPS), '-c:v', 'mjpeg', '-i', '-'];
   let graph = '[0:v]pad=ceil(iw/2)*2:ceil(ih/2)*2';
   const tr = take.manifest.trigger;
-  if (sc.trigger.action !== 'press' && Number.isFinite(tr.x) && Number.isFinite(tr.y)) {
+  if ((take.manifest.actions?.length ?? 1) === 1 && tr.event !== 'keydown' && Number.isFinite(tr.x) && Number.isFinite(tr.y)) {
     const size = await frameSize(takePath(take.takeId, frames[0].file));
     const k = size.width / sc.viewport.width;
     const cursor = join(outDir, 'cursor.png');
@@ -61,3 +65,6 @@ html,body{margin:0;height:100%;background:#111}video{display:block;width:100%;he
 </video></body></html>`);
   return { player, mp4, durationS: round(ticks.length / FPS, 2), framesShown: new Set(ticks).size, framesCaptured: frames.length };
 }
+
+// Additive shared-clock player; existing takeVideo callers and clips are preserved.
+export { comparisonPlayer, buildComparisonPlayer } from './comparison-player.mjs';

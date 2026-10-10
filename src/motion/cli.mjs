@@ -6,15 +6,16 @@ import { SCENARIO_HELP } from './scenario.mjs';
 const HELP = `usage: ${CLI} <command> [options]
   capture --scenario <file.json> [--label <label>] [--takes 3] [--before-ms 300] [--after-ms 800]
       Fresh takes of one interaction; prints takeIds.
-  inspect <take-id> [--from <ms>] [--to <ms>] [--crop x,y,w,h]
+  inspect <take-id> [--align-action <id>] [--from <ms>] [--to <ms>] [--crop x,y,w,h]
       Table of watched-element changes (read first) + sheets holding every
       frame in the window (split automatically; view the one covering your
       moment). Times are ms from the trigger; negatives allowed.
-  compare --before <id,id,id> --after <id,id,id> [--from <ms>] [--to <ms>] [--crop x,y,w,h]
+  compare --before <id,id,id> --after <id,id,id> [--align-action <id>] [--from <ms>] [--to <ms>] [--crop x,y,w,h] [--markers <file.json>]
       One table per take + sheets with one row per take (split into
-      time slices automatically). Also makes a plain video of the first
-      before and first after take for the user (video.attach): you cannot
-      see them; attach them, never cite them.
+      time slices automatically). Also makes a synchronized comparison
+      player for the user (video.attach), with slow motion, frame stepping,
+      take selectors and downloadable clips. Markers JSON is an array of
+      {fromMs,toMs,label,description}. View sheets as evidence; attach the player.
   help scenario   annotated scenario format, to write one for any app
 View any printed sheets[].path with the motion_view tool.
 `;
