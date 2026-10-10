@@ -97,6 +97,7 @@ const functionSource = patched.slice(start, end).replace(/async\s*$/, "");
 const normalizer = files => files.map(f => ({ ...f }));
 function liveApply(partial, activity, terminal = false, attachments = []) {
   let redraws = 0;
+  const updates = [];
   const apply = runInNewContext(`const qmMergeImmediateFiles=${mergeImmediateFiles.toString()};${functionSource};Zy`, {
     sq: (work, run) => { work.activity = run.activity; return true; },
     oq: () => {}, mi: () => 1, Yg: () => {}, Nb: run => run.terminal,
@@ -104,8 +105,8 @@ function liveApply(partial, activity, terminal = false, attachments = []) {
     // Remaining branches use stream helpers only for nonempty replies/errors.
     fail: () => {}, Ld: () => {},
   });
-  const result = apply({}, partial, { acc: '', lastProgressAt: 0 }, { activity, terminal, result: { status: 'ok', attachments } }, () => redraws++);
-  return { result, redraws };
+  const result = apply({ push: update => updates.push(update) }, partial, { acc: '', lastProgressAt: 0 }, { activity, terminal, result: { status: 'ok', attachments } }, () => redraws++);
+  return { result, redraws, updates };
 }
 const event = (delivery = 'immediate', ok = true) => ({ type: 'tool_result', payload: { tool: 'attach', ok, delivery, files: [attachment()] } });
 await test('actual shipped applyRun renders confirmed immediate image before terminal gate', () => {
@@ -115,10 +116,49 @@ await test('actual shipped applyRun renders confirmed immediate image before ter
   assert.equal(partial.deliveredFiles[0].artifactId, 'sheet');
   liveApply(partial, [event()]); assert.equal(partial.deliveredFiles.length, 1);
 });
+await test('shipped stream consumer publishes immediate files into its message copy without changing text', async () => {
+  const at = patched.indexOf('async function jH(');
+  const end = patched.indexOf('async function KH(', at);
+  assert.ok(at >= 0 && end > at);
+  const consume = runInNewContext(patched.slice(at, end) + ';jH');
+  const partial = { role: 'assistant', content: [{ type: 'text', text: 'Before' }], work: { activity: [], status: 'working' } };
+  let visible;
+  let final;
+  const stream = {
+    async *[Symbol.asyncIterator]() {
+      yield { type: 'start', partial };
+      assert.notEqual(visible, partial, 'consumer owns a shallow copy');
+      assert.equal(visible.work, partial.work, 'work redraws share nested state');
+      const { result, updates } = liveApply(partial, [event()]);
+      assert.equal(result, 'open');
+      assert.equal(visible.deliveredFiles, undefined, 'redraw alone cannot publish the new field');
+      assert.equal(updates.length, 1);
+      assert.equal(updates[0].delta, '');
+      yield updates[0];
+      assert.equal(visible.deliveredFiles[0].artifactId, 'sheet');
+      assert.equal(visible.content[0].text, 'Before');
+      assert.equal(liveApply(partial, [event()]).updates.length, 0, 'repeated activity publishes nothing');
+      partial.content[0].text += ' after';
+      yield { type: 'text_delta', contentIndex: 0, delta: ' after', partial };
+      assert.equal(visible.content[0].text, 'Before after');
+      assert.equal(visible.deliveredFiles.length, 1);
+      final = { ...partial, stopReason: 'stop' };
+      yield { type: 'done', message: final };
+    },
+    result: async () => final,
+  };
+  const events = [];
+  await consume({ messages: [] }, { model: {}, convertToLlm: async () => [] }, undefined,
+    async update => { events.push(update); visible = update.message; }, async () => stream);
+  assert.deepEqual(events.map(update => update.type), ['message_start', 'message_update', 'message_update', 'message_end']);
+  assert.equal(visible.content[0].text, 'Before after');
+  assert.equal(visible.deliveredFiles.length, 1);
+});
 await test('live renderer does not promote ordinary, failed, unrelated or unregistered files', () => {
   const partial = { work: { activity: [], status: 'working' } };
-  liveApply(partial, [event('reply'), event('immediate', false), { ...event(), type: 'tool_call' }, { type: 'tool_result', payload: { ...event().payload, files: [{ name: 'path-only.png' }] } }]);
+  const result = liveApply(partial, [event('reply'), event('immediate', false), { ...event(), type: 'tool_call' }, { type: 'tool_result', payload: { ...event().payload, files: [{ name: 'path-only.png' }] } }]);
   assert.equal(partial.deliveredFiles, undefined);
+  assert.equal(result.updates.length, 0);
 });
 await test('closing reply retains interim evidence and adds final files without duplicates', () => {
   const partial = { work: { activity: [], status: 'working' } };
