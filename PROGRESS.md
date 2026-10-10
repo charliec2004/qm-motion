@@ -19,16 +19,16 @@
 - The CLI now ships in `qm-motion-sandbox:motion` at
   `/opt/qm-motion/cli/cli.mjs`; `npm start` builds its small image layer. Fixtures
   and tests are excluded. Core and web overlays build and run successfully.
-- **Live blockers:** a real model turn failed with OpenAI `401 invalid_api_key`.
+- **Live blocker:** a real model turn failed with OpenAI `401 invalid_api_key`.
   The user must replace `OPENAI_API_KEY` locally in `deployment/.env`; do not
   copy credentials from another QM deployment. Automatic invocation and
   actual interim-image delivery still need real-turn verification.
 - The old host port 8081 and tailnet port 443 belong to the separate `qm-plain`
   deployment, which is preserved. QM Motion now uses host 18980–18982 and
   public URL `https://charlies-pc.tail1d1ed7.ts.net:9443`. Local services and
-  authenticated loopback access pass. The new route requires the user to run
-  `sudo tailscale serve --bg --https=9443 http://127.0.0.1:18981` (operator access
-  denied; sudo requires a password). Existing routes are unchanged.
+  authenticated loopback access pass. The user installed the dedicated Serve
+  route; HTTPS access now reaches the portal and returns the expected HTTP 401
+  while signed out. Existing routes are unchanged.
 - Primary checkout has unrelated private-memory edits in config/runtime and
   computer.py; preserve them. Release uses clean config/runtime/layer paths
   via QM CLI overrides. Evidence is retained privately in
@@ -39,7 +39,7 @@
   API access passes. TLS upstream is updated. The preview recorder endpoint
   serves the new code; app preview returns 502 until an agent computer/dev
   server is available. The feature branch was deleted locally and remotely.
-  The API-key and Tailscale blockers above still prevent live sign-off.
+  The API-key blocker above still prevents live sign-off.
 
 September 27, 2026, submission state. **The motion extension is built and
 verified end to end.** A clean agent-built rehearsal (4:10–4:19 PM) found,
