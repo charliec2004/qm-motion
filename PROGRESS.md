@@ -1,6 +1,6 @@
 # QM Motion progress
 
-## October 9: motion workflow improvements (reviewed; release in progress)
+## October 9: motion workflow improvements (merged and locally deployed; live checks blocked)
 
 - Issues #1–#5 are implemented: synchronized comparison with actual-frame
   stepping/markers, preview demonstration export, multi-action capture with
@@ -32,8 +32,14 @@
 - Primary checkout has unrelated private-memory edits in config/runtime and
   computer.py; preserve them. Release uses clean config/runtime/layer paths
   via QM CLI overrides. Evidence is retained privately in
-  `/tmp/qm-motion-release/` pending transfer into ignored host artifacts.
-- Merge, final deployment from main and branch cleanup are pending.
+  `artifacts/releases/20261009-motion-improvements/` in the primary checkout.
+- PR [#6](https://github.com/charliec2004/qm-motion/pull/6) merged as
+  `60d21cf`; primary main advanced with unrelated edits restored. Clean main
+  core/web/skills and the rebuilt CLI image are deployed; authenticated local
+  API access passes. TLS upstream is updated. The preview recorder endpoint
+  serves the new code; app preview returns 502 until an agent computer/dev
+  server is available. The feature branch was deleted locally and remotely.
+  The API-key and Tailscale blockers above still prevent live sign-off.
 
 September 27, 2026, submission state. **The motion extension is built and
 verified end to end.** A clean agent-built rehearsal (4:10–4:19 PM) found,
