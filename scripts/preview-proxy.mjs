@@ -1,5 +1,6 @@
 import http from 'node:http';
 import net from 'node:net';
+import { recorderSource } from './preview-recording.mjs';
 import { execFileSync } from 'node:child_process';
 
 // Forwards 127.0.0.1:15173 on this host to the agent computer's dev server (port 5173), so
@@ -29,11 +30,28 @@ function unavailable(res, error) {
 }
 
 const server = http.createServer((req, res) => {
+  if (req.url === '/__motion/recorder.js') {
+    res.writeHead(200, { 'content-type': 'application/javascript; charset=utf-8', 'cache-control': 'no-store' });
+    return res.end(recorderSource());
+  }
   let host;
   try { host = computerAddress(); } catch (e) { return unavailable(res, e); }
-  const upstream = http.request({ host, port: TARGET, method: req.method, path: req.url, headers: rewrite(req.headers) }, up => {
-    res.writeHead(up.statusCode, up.headers);
-    up.pipe(res);
+  const upstream = http.request({ host, port: TARGET, method: req.method, path: req.url, headers: { ...rewrite(req.headers), 'accept-encoding': 'identity' } }, up => {
+    // Only the explicit local-app preview gets the recording controls. Non-HTML,
+    // upgrades and application responses retain their normal streaming path.
+    if (req.method === 'GET' && /text\/html/i.test(up.headers['content-type'] ?? '') && !up.headers['content-encoding']) {
+      const chunks = []; let bytes = 0;
+      up.on('data', chunk => { bytes += chunk.length; chunks.push(chunk); if (bytes > 4 * 1024 * 1024) up.destroy(new Error('preview HTML exceeds 4 MB recording surface limit')); });
+      up.on('error', e => unavailable(res, e));
+      up.on('end', () => {
+        let html = Buffer.concat(chunks).toString('utf8');
+        const script = '<script src="/__motion/recorder.js" defer></script>';
+        html = html.includes('</head>') ? html.replace('</head>', script + '</head>') : html + script;
+        const headers = { ...up.headers, 'content-length': Buffer.byteLength(html), 'cache-control': 'no-store' };
+        delete headers['transfer-encoding']; delete headers.etag;
+        res.writeHead(up.statusCode, headers); res.end(html);
+      });
+    } else { res.writeHead(up.statusCode, up.headers); up.pipe(res); }
   });
   upstream.on('error', e => (res.headersSent ? res.destroy() : unavailable(res, e)));
   req.pipe(upstream);

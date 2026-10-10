@@ -11,7 +11,7 @@ Terms such as turn, take, trigger and sheet are defined in
 flowchart LR
     Mac["Your Mac: browser"] -- "HTTPS over Tailscale" --> TS["Tailscale Serve on the Linux box"]
     subgraph LB["Linux box: Docker containers"]
-      TS --> Portal["QM portal :8081, sign-in"]
+      TS --> Portal["QM portal :18981, sign-in"]
       Portal --> UI["QM web UI: chat"]
       Portal --> Core["QM core: the agent, pi + GPT-6 Sol"]
       UI --> Core

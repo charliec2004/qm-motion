@@ -29,6 +29,10 @@ page live over Tailscale (`npm run preview -- start`), the three prompts to
 paste into QM, the checks after each one (`npm run trailhead -- probe`), and
 how to record and present it.
 
+For user-demonstrated interactions, multi-step capture, and synchronized
+playback, see [the motion workflow](docs/motion-workflow.md). Current deployment
+and verification status is in [PROGRESS.md](PROGRESS.md).
+
 ## Run on Linux; access over Tailscale
 
 Verified on Linux x86_64 with Docker + Compose, Node 25 (24+ required), npm,
@@ -43,7 +47,7 @@ npm start
 (cd deployment && ./node_modules/.bin/qm admin-login)
 ```
 
-On this deployment, open **https://charlies-pc.tail1d1ed7.ts.net** from a device
+On this deployment, open **https://charlies-pc.tail1d1ed7.ts.net:9443** from a device
 on the same Tailscale network. Linux runs the services; a Mac can use the web UI
 without a local install or SSH tunnel. See [sign-in from your Mac](docs/setup.md#sign-in-from-your-mac)
 for QM's existing administrator login. `npm run login` still opens Chromium

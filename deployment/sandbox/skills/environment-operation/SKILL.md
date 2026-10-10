@@ -10,7 +10,7 @@ Use `execute` to check `chromium --version`, `agent-browser --version`,
 configured local computer. Local `sandbox status`/restart actions are unsupported;
 do not call them as a prerequisite for executing a command.
 
-The recorder is `motion capture` (`node /root/workspace/motion/cli.mjs`; see
+The recorder is `motion capture` (`node /opt/qm-motion/cli/cli.mjs`; see
 the motion-workflow skill). Chromium is `/usr/bin/chromium`. agent-browser uses it through
 `AGENT_BROWSER_EXECUTABLE_PATH`; do not select Kernel, Anchor, Browserbase, or
 another remote browser. Target dev servers run in this same computer.

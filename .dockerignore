@@ -12,3 +12,8 @@
 !deployment/sandbox
 !deployment/sandbox/Dockerfile
 !deployment/gbrain.Dockerfile
+!deployment/motion.Dockerfile
+!src
+!src/motion
+!src/motion/*.mjs
+src/motion/*.test.mjs

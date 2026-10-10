@@ -91,8 +91,8 @@ An exit code or filename alone is not proof of a successful agent workflow.
   PostgreSQL, the Caddy TLS front door, and the **agent computer**
   (`qm-sbx-…`), which is where the agent's commands, the target app and a
   headless Chromium all run.
-- **Access:** Tailscale Serve proxies `https://charlies-pc.tail1d1ed7.ts.net`
-  to the portal (port 8081) for devices on the tailnet. Sign in by running
+- **Access:** Tailscale Serve proxies `https://charlies-pc.tail1d1ed7.ts.net:9443`
+  to the portal (port 18981) for devices on the tailnet. Sign in by running
   `qm admin-login` on the Linux box and opening the link on the device
   ([setup.md](docs/setup.md#sign-in-from-your-mac)).
 - **Deploying a change** means running `npm start`, which is idempotent and
@@ -102,8 +102,9 @@ An exit code or filename alone is not proof of a successful agent workflow.
     30 s.
   - Sandbox image changes are different: rerun `npm run bootstrap`, then
     follow [sandbox image changes](docs/architecture.md#sandbox-image-changes).
-  - During development the `motion` CLI is copied into `/root/workspace`
-    ([spec §3](docs/spec.md#3-development-loop-for-the-motion-cli)).
+  - `npm start` builds the current CLI into `qm-motion-sandbox:motion` at
+    `/opt/qm-motion/cli/cli.mjs`; fresh computers receive it automatically.
+    Existing computers need the sandbox-image replacement procedure.
 - **The browser is headless and private to the agent computer.** Nobody can
   see or click it, and the computer publishes no ports, so its
   `localhost:4173` is unreachable from the host. Users see evidence as images

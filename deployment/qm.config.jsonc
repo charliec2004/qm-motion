@@ -1,9 +1,9 @@
 {
   "contract": 1,
   "orgId": "qm-motion",
-  "publicUrl": "https://charlies-pc.tail1d1ed7.ts.net",
+  "publicUrl": "https://charlies-pc.tail1d1ed7.ts.net:9443",
   "target": "docker",
-  "basePort": 8080,
+  "basePort": 18980,
   "botName": "QM Motion",
   "orgName": "QM Motion",
   "services": [
@@ -17,7 +17,7 @@
   "skills": [],
   "sandbox": {
     "backend": "local",
-    "image": "qm-motion-sandbox:0.1.12"
+    "image": "qm-motion-sandbox:motion"
   },
   "env": {
     "core": {

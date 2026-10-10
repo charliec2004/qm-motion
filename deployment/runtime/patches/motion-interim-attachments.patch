@@ -1,0 +1,165 @@
+diff --git a/src/core/orchestrator/attach-tool.ts b/src/core/orchestrator/attach-tool.ts
+index 306a9b9..8b3d606 100644
+--- a/src/core/orchestrator/attach-tool.ts
++++ b/src/core/orchestrator/attach-tool.ts
+@@ -1,7 +1,7 @@
+ import type { OutgoingAttachment } from "../../types.ts";
+ import { hasParentPathSegment, type Sandbox, type SandboxHandle } from "../../sandbox/sandbox.ts";
+ import type { BlobTransferStore } from "../../persistence/blob-transfer.ts";
+-import type { AttachFiles, AttachResult } from "../../tools/primitives.ts";
++import type { AttachFiles } from "../../tools/primitives.ts";
+ import {
+   collectNamedOutbound,
+   discardOutbound,
+@@ -14,6 +14,9 @@ export interface AttachToolsContext {
+   provision: () => Promise<SandboxHandle>;
+   blobTransfer: BlobTransferStore;
+   fileRegistration: ArtifactRegistration;
++  // Immediate files ride the authenticated current-run tool-result stream.
++  // Enable only on the web conversation surface that can render them live.
++  immediate?: boolean;
+ }
+ 
+ export interface StagedAttachments {
+@@ -29,7 +32,11 @@ interface StagedEntry {
+ export function createAttachStaging(ctx: AttachToolsContext): StagedAttachments {
+   const staged = new Map<string, StagedEntry>();
+   let calls = 0;
+-  const attach = async (files: readonly string[]): Promise<AttachResult> => {
++  const attach: AttachFiles = async (files, delivery = "reply") => {
++    if (delivery !== "reply" && delivery !== "immediate")
++      return { ok: false, message: "unknown attachment delivery mode" };
++    if (delivery === "immediate" && !ctx.immediate)
++      return { ok: false, message: "immediate attachments are unavailable on this conversation surface" };
+     const paths = [...new Set(files.map((f) => String(f ?? "").trim()).filter(Boolean))];
+     if (!paths.length) return { ok: false, message: "attach needs at least one workspace file path" };
+     const invalid = paths.filter(hasParentPathSegment);
+@@ -38,7 +45,7 @@ export function createAttachStaging(ctx: AttachToolsContext): StagedAttachments
+         ok: false,
+         message: `couldn't attach: ${invalid.map((p) => `${p} (not found)`).join(", ")} — nothing was staged; fix the path(s) and retry`,
+       };
+-    const resulting = new Set([...staged.keys(), ...paths]);
++    const resulting = new Set(delivery === "immediate" ? paths : [...staged.keys(), ...paths]);
+     if (resulting.size > MAX_OUTBOUND_FILES)
+       return {
+         ok: false,
+@@ -48,7 +55,7 @@ export function createAttachStaging(ctx: AttachToolsContext): StagedAttachments
+     const register = { ...ctx.fileRegistration, seed: `${ctx.fileRegistration.seed}:attach:${calls}` };
+     calls += 1;
+     const keptNames = [...staged.entries()]
+-      .filter(([path]) => !paths.includes(path))
++      .filter(([path]) => delivery === "immediate" || !paths.includes(path))
+       .map(([, entry]) => entry.attachment.name);
+     const r = await collectNamedOutbound(ctx.sandbox, handle, paths, ctx.blobTransfer, register, keptNames);
+     const bad = [
+@@ -61,6 +68,26 @@ export function createAttachStaging(ctx: AttachToolsContext): StagedAttachments
+         ok: false,
+         message: `couldn't attach: ${bad.join(", ")} — nothing was staged; fix the path(s) and retry`,
+       };
++    if (delivery === "immediate" && r.attachments.some((a) => !a.artifactId)) {
++      await Promise.all(r.attachments.map((a) =>
++        discardOutbound(a, ctx.blobTransfer, register, r.createdArtifactIds),
++      ));
++      return { ok: false, message: "couldn't register immediate files for this conversation — nothing was sent" };
++    }
++    // Immediate files are retained by the recorded tool result, not queued for
++    // the closing reply. In particular, do not replace/discard a staged file.
++    if (delivery === "immediate")
++      return {
++        ok: true,
++        delivery,
++        files: r.attachments.map((a) => ({
++          name: a.name,
++          mimetype: a.mimetype,
++          sizeBytes: a.sizeBytes,
++          ...(a.artifactId ? { artifactId: a.artifactId } : {}),
++        })),
++        staged: staged.size,
++      };
+     for (const [i, attachment] of r.attachments.entries()) {
+       const path = paths[i]!;
+       const superseded = staged.get(path);
+diff --git a/src/core/orchestrator.ts b/src/core/orchestrator.ts
+index 1923708..46a5dd5 100644
+--- a/src/core/orchestrator.ts
++++ b/src/core/orchestrator.ts
+@@ -2289,6 +2289,7 @@ export function createOrchestrator(deps: OrchestratorDeps): Orchestrator {
+           spine,
+         });
+         const attachStaging = createAttachStaging({
++          immediate: input.surface === "web" && !input.surfaceTools && !strictReadOnly,
+           sandbox: deps.sandbox,
+           provision,
+           blobTransfer,
+diff --git a/src/harness/agent-tools.ts b/src/harness/agent-tools.ts
+index dab0363..dc3354e 100644
+--- a/src/harness/agent-tools.ts
++++ b/src/harness/agent-tools.ts
+@@ -3355,25 +3355,30 @@ export function createAgentTools(ref: ToolContextRef, opts?: AgentToolsOptions):
+       "already written; they ride out with the reply as real uploads. Call it again to add more — " +
+       "re-naming the same path replaces it. The result lists exactly what will be delivered; if a " +
+       "path is wrong nothing is staged and the result says so, so never claim you sent a file you " +
+-      "have not seen confirmed here.",
++      "have not seen confirmed here. Set delivery to immediate to show inspected evidence in this " +
++      "web conversation while work continues; this does not queue it for the closing reply. " +
++      "Immediate delivery is unavailable on other surfaces. Omit delivery for the usual behavior.",
+     parameters: Type.Object({
++      delivery: Type.Optional(Type.Union([Type.Literal("reply"), Type.Literal("immediate")])),
+       files: Type.Array(Type.String(), {
+         description: 'Workspace-relative paths of files to deliver with this reply, e.g. ["report.md"].',
+       }),
+     }),
+-    async execute(callId, params: { files?: string[] }) {
++    async execute(callId, params: { files?: string[]; delivery?: "reply" | "immediate" }) {
+       const tc = ref.current;
+       if (!tc) return text("[error] no active tool context");
+       const files = (params.files ?? []).map((f) => String(f ?? "").trim()).filter(Boolean);
+-      await recordCall(callId, { tool: "attach", files });
+-      const r = await tc.attach(files);
++      await recordCall(callId, { tool: "attach", files, ...(params.delivery ? { delivery: params.delivery } : {}) });
++      const r = await tc.attach(files, params.delivery);
+       if (!r.ok) return recordResult(callId, { tool: "attach", ok: false }, text(`[not attached] ${r.message}`), true);
+       const list = r.files.map((f) => `${f.name} (${f.sizeBytes} bytes, ${f.mimetype})`).join("; ");
+       const total = r.staged > r.files.length ? ` ${r.staged} file(s) are now staged for this reply.` : "";
+       return recordResult(
+         callId,
+-        { tool: "attach", ok: true, files: r.files },
+-        text(`[attached] ${list} — delivered with your reply when this turn ends.${total}`),
++        { tool: "attach", ok: true, files: r.files, ...(r.delivery ? { delivery: r.delivery } : {}) },
++        text(r.delivery === "immediate"
++          ? `[attached immediately] ${list} — available in this conversation while work continues.`
++          : `[attached] ${list} — delivered with your reply when this turn ends.${total}`),
+       );
+     },
+   });
+diff --git a/src/tools/primitives.ts b/src/tools/primitives.ts
+index 0689bec..c9a930d 100644
+--- a/src/tools/primitives.ts
++++ b/src/tools/primitives.ts
+@@ -177,9 +177,13 @@ interface AttachedFileMeta {
+   artifactId?: string;
+ }
+ 
+-export type AttachResult = { ok: true; files: AttachedFileMeta[]; staged: number } | { ok: false; message: string };
++export type AttachDelivery = "reply" | "immediate";
+ 
+-export type AttachFiles = (files: readonly string[]) => Promise<AttachResult>;
++export type AttachResult =
++  | { ok: true; files: AttachedFileMeta[]; staged: number; delivery?: AttachDelivery }
++  | { ok: false; message: string };
++
++export type AttachFiles = (files: readonly string[], delivery?: AttachDelivery) => Promise<AttachResult>;
+ 
+ export interface ToolContext extends SurfaceToolDeps {
+   runtime?(request: RuntimeRequest, signal?: AbortSignal): Promise<RuntimeResult>;
+@@ -1331,8 +1335,8 @@ export function createToolContext(deps: ToolContextDeps): ToolContext {
+       deps.surface
+         ? deps.surface.staySilent(reason)
+         : Promise.resolve({ ok: true as const, message: "[staying silent]" }),
+-    attach: (files) =>
+-      deps.attach ? deps.attach(files) : Promise.resolve({ ok: false as const, message: ATTACH_UNAVAILABLE_MESSAGE }),
++    attach: (files, delivery) =>
++      deps.attach ? deps.attach(files, delivery) : Promise.resolve({ ok: false as const, message: ATTACH_UNAVAILABLE_MESSAGE }),
+   };
+ }
+ 

@@ -3,7 +3,7 @@
 This doc owns the **exact contracts**: file formats, command flags, outputs,
 errors and test procedures. [architecture.md](architecture.md) explains why;
 [plan.md](plan.md) orders the work. Terms are defined in
-[brief.md](brief.md#terms). Everything here is proposed until built.
+[brief.md](brief.md#terms). Implementation and live verification status are recorded in PROGRESS.md.
 
 Choices marked **Decision** were made on September 27 to remove ambiguity.
 Change them here first if needed.
@@ -136,7 +136,13 @@ unless the agent owns a `background` job, which kills a server started with
     2–4. It is never given to the agent, because its watch list points at the
     defective panel. In real use the agent writes its own scenario
     (`cli.mjs help scenario`) anywhere under `/root/workspace`.
-- **Copy into the computer:**
+- **Deployed CLI:** `npm start` builds `deployment/motion.Dockerfile` on the
+  bootstrapped browser/daemon base. `qm-motion-sandbox:motion` contains the CLI
+  at `/opt/qm-motion/cli/cli.mjs`, outside the persistent home volume. Fresh
+  computers receive it automatically. Fixtures and tests are excluded from
+  the image. Existing computers follow the documented sandbox-image replacement
+  procedure.
+- **Optional developer copy into an existing computer:**
   `tar -C src -c --exclude=scenarios motion | python3 scripts/computer.py tar -x -C /root/workspace`.
   The fixture goes to `/tmp/motion-fixture/` in the computer, outside the agent's workspace.
 - **Run:** `node /root/workspace/motion/cli.mjs <command> …`. The guidance
@@ -351,7 +357,7 @@ element may be covered or disabled, and exits 1.
 
 ## 6. `motion inspect`
 
-`motion inspect <take-id> [--from <ms>] [--to <ms>] [--crop x,y,w,h]`. Times
+`motion inspect <take-id> [--align-action <id>] [--from <ms>] [--to <ms>] [--crop x,y,w,h]`. Times
 are ms from the trigger. The window defaults to the whole take, so the first
 call shows the full table and the next can narrow the window.
 
@@ -437,7 +443,7 @@ call shows the full table and the next can narrow the window.
 ## 7. `motion compare`
 
 `motion compare --before <take-id,…> --after <take-id,…> [--from <ms>]
-[--to <ms>] [--crop x,y,w,h]`. The window, frames and crop work as in
+[--to <ms>] [--crop x,y,w,h] [--align-action <id>] [--markers <file.json>]`. The window, frames and crop work as in
 section 6.
 
 - **Refuses** takes whose URL, viewport, scale factor, reduced-motion
@@ -481,26 +487,34 @@ section 6.
 - **What it does not do:** it never states whether the defect is present, and
   it applies no thresholds or "jump" flags; the agent judges each take.
 
-## 7b. The user's before and after videos (made by `motion compare`)
+## 7b. The user's comparison player
 
-After its sheets, `compare` encodes two plain videos for the user, one of the
-first before take and one of the first after take, into its output directory:
-`before.mp4`/`before.webm`/`before.html` and the same for `after`. Its result
-gains `video: { attach: [before.html, after.html], mp4, takes, note }`. They
-are built only from saved frames; capture, the tables, the sheets and
-`motion_view` are unchanged, and the model never sees them. A render failure
-becomes a compare warning and `video: null`; the evidence is still returned.
+`compare` builds a self-contained `comparison.html` from the actual captured
+images and their trigger-relative timestamps. It offers synchronized playback
+and seeking, 0.25×/0.5×/1×/2× speed, frame stepping on either side, and selectors
+for all before/after takes. Stepping one side moves the shared clock; the other
+shows its latest captured frame. Frames are held between captures, never
+interpolated. Capture gaps and unavailable/end-of-take states are labelled.
+Partial takes are flagged, and the end is based on observed evidence, not a
+requested capture duration. Browser refresh can skip images during continuous
+playback; frame stepping visits each captured frame.
 
-- **Timing:** real speed at 60 fps from the first frame to `recordAfterMs`.
-  Each tick shows the latest frame captured by then, advancing at most one
-  frame per tick, so every captured frame is on screen at least once.
-- **Picture:** the captured frames as they are, plus an arrow cursor at
-  `manifest.trigger.x/y` (headless Chromium draws none). No side by side,
-  labels, clock, slow motion or captions; the agent's reply says which video
-  is which and where to look.
-- **Delivery:** QM chat previews `.html` attachments inline (sandboxed 360 px
-  iframe) and offers video files only as downloads, so each `.html` embeds
-  the WebM and MP4 as data URIs. Verified September 27 in a real UI turn.
+Optional `--markers <file.json>` adds agent-described intervals. The file is an
+array of `{fromMs,toMs,label,description}` objects relative to the selected
+alignment action. Invalid or out-of-range markers fail before rendering.
+
+`video.attach` lists the comparison HTML and separate downloadable MP4 clips
+of the first before/after takes; attach all of them. QM's inline HTML sandbox
+allows scripts but blocks in-frame downloads, so clips must be separate chat
+attachments. The original `before.html`/`after.html` and WebM clips are retained
+as encoding outputs/fallbacks. Clip encoding uses 60 fps and can repeat or
+shift frames to show every captured frame; the comparison player's clock uses
+raw capture timestamps instead. The model still reads tables and views sheets
+with `motion_view`, rather than treating its generated player as vision input.
+
+Player and clip rendering fail independently and report warnings; capture and
+inspection remain available. User demonstration recording and sequence
+alignment are described in [motion-workflow.md](motion-workflow.md).
 
 ## 7a. Chrome animation details (optional; cut early)
 
